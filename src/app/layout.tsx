@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CrmProvider } from "@/modules/crm/provider";
 export const metadata: Metadata = {
   title: { default: "Dashboard | Nusa CRM", template: "%s | Nusa CRM" },
   description:
-    "Fondasi CRM telekomunikasi — proyek Integrasi Aplikasi Korporasi.",
+    "Nusa CRM — demo interaktif manajemen pelanggan, langganan, dan layanan telekomunikasi.",
 };
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id">
-      <body>{children}</body>
+      <body>
+        <CrmProvider>{children}</CrmProvider>
+      </body>
     </html>
   );
 }
