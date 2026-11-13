@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Construction } from "lucide-react";
 import { navigation } from "@/lib/navigation";
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return navigation
     .filter((item) => item.href !== "/dashboard")

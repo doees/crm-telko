@@ -24,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Buka http://localhost:3000; root mengarah ke `/dashboard`. Tidak perlu `.env` untuk dashboard contoh. Instalasi menghasilkan Prisma Client secara otomatis tanpa menghubungi database.
+Buka http://localhost:3000; root langsung menampilkan dashboard. Tidak perlu `.env` untuk dashboard contoh. Instalasi menghasilkan Prisma Client secara otomatis tanpa menghubungi database.
 
 Untuk production lokal:
 
@@ -96,7 +96,7 @@ Pemeriksaan TypeScript menjalankan `next typegen` lebih dahulu agar tipe route t
 
 Pemeriksaan manual di browser:
 
-1. Buka `/`; pastikan berpindah ke `/dashboard`.
+1. Buka `/` dan `/dashboard`; pastikan keduanya menampilkan dashboard.
 2. Cari `Andi`: satu pelanggan tampil; cari teks acak: pesan hasil kosong tampil.
 3. Ganti periode 6 bulan menjadi 3 bulan: grafik berubah.
 4. Buka setiap menu: halaman penanda tampil dan menu aktif sesuai URL.
@@ -109,3 +109,19 @@ Pemeriksaan manual di browser:
 Branch tahap ini: `feat/crm-foundation`. Ajukan Pull Request ke `main`; jangan merge tanpa review anggota kelompok. CI memeriksa aplikasi pada setiap Pull Request ke main dan push ke feature branch. Commit `package-lock.json` dan migration; jangan commit `.env`, `node_modules`, `.next`, atau kredensial.
 
 Lihat [laporan tahap 1](docs/TAHAP-1.md) dan [catatan perintah](docs/COMMANDS.md) untuk bukti pengerjaan dan batas validasi.
+
+## Demo publik GitHub Pages
+
+Target: https://doees.github.io/crm-telko/
+
+Workflow `.github/workflows/pages.yml` membangun dan menerbitkan dashboard contoh dari `feat/crm-foundation`. Branch main tetap menjadi dasar review PR. GitHub Pages dikonfigurasi dengan Source **GitHub Actions**. Build memakai `GITHUB_PAGES=true`, `output: export`, `basePath: /crm-telko` dan trailing slash agar akses langsung ke setiap halaman bekerja.
+
+GitHub Pages hanya menyajikan HTML/CSS/JavaScript statis. Demo tidak menjalankan PostgreSQL, Prisma query, autentikasi atau API. Mode Next.js server tetap tersedia dengan build normal tanpa `GITHUB_PAGES`; gunakan hosting Node.js dan PostgreSQL ketika tahap backend dimulai.
+
+Untuk membuat ekspor yang sama secara lokal (macOS/Linux/Git Bash):
+
+```bash
+GITHUB_PAGES=true npm run build
+```
+
+Pada PowerShell: `$env:GITHUB_PAGES="true"; npm run build`. Hasil statis berada di `out/` (diabaikan Git). Hapus variabel `GITHUB_PAGES` sebelum menjalankan build server. Untuk build normal gunakan `npm run build`, kemudian `npm start`.

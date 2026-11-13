@@ -45,6 +45,7 @@ Lihat [README](../README.md) untuk instalasi, konfigurasi database, checklist mo
 
 - `.env.example`
 - `.github/workflows/ci.yml`
+- `.github/workflows/pages.yml`
 - `.gitignore`
 - `.nvmrc`
 - `README.md`
@@ -86,3 +87,20 @@ Lihat [README](../README.md) untuk instalasi, konfigurasi database, checklist mo
 - `tests/integration/.gitkeep`
 - `tests/unit/.gitkeep`
 - `tsconfig.json`
+
+## Publikasi demo GitHub Pages — 14 November 2026 (Asia/Jakarta)
+
+Pengguna meminta aplikasi dijalankan dan link github.io publik. Ditambahkan mode build statis khusus Pages melalui `GITHUB_PAGES=true`, dengan base path `/crm-telko` dan trailing slash. Build normal tetap mendukung server Next.js. Root langsung merender dashboard agar tidak bergantung pada redirect server. Route modul membatasi parameter ke halaman yang sudah dihasilkan. Sidebar mengenali root dan URL trailing slash.
+
+Workflow `pages.yml` menjalankan instalasi, lint, TypeScript, build statis, upload artifact dan deployment Pages dari feature branch. Pengguna mengizinkan publikasi demo; implementasi tidak di-merge ke main. Tidak menambahkan fitur bisnis baru.
+
+Hasil pemeriksaan tambahan:
+
+- Lint, TypeScript, build Next.js server: lulus.
+- Aplikasi benar-benar dijalankan melalui `npm start -- --port 3100`; HTTP GET `/`, `/dashboard`, `/customers`, `/packages`, `/subscriptions`, `/tickets`, `/integrations` mengembalikan 200 dan HTML Nusa CRM. `/tidak-ada` mengembalikan 404. Proses server dihentikan setelah pemeriksaan.
+- `GITHUB_PAGES=true npm run build`: lulus, menghasilkan folder `out`.
+- Pemeriksaan delapan HTML hasil ekspor: seluruh script dan stylesheet tersedia, seluruh URL aset serta tautan internal memakai prefix `/crm-telko/`.
+- CI sebelum perubahan Pages telah lulus di GitHub Actions. Hasil workflow setelah perubahan dipantau terpisah.
+- Percobaan mengaktifkan Pages melalui API ditolak HTTP 403 `Resource not accessible by integration`. Pengguna diminta memilih Settings → Pages → Source: GitHub Actions. Sampai layanan Pages diaktifkan dan deployment berhasil, target https://doees.github.io/crm-telko/ belum dinyatakan live.
+
+Batas hosting: Pages hanya melayani demo statis dengan data contoh. PostgreSQL, query Prisma, API dan autentikasi memerlukan hosting server tersendiri ketika dikembangkan. Pemeriksaan HTTP/HTML bukan QA browser visual atau pengujian interaksi JavaScript.

@@ -11,3 +11,7 @@ Lihat `docs/TAHAP-1.md` untuk hasil lint, TypeScript, build, dan validasi Prisma
 ## Lokal
 
 Jalankan `npm ci` dan `npm run dev` dari root, lalu buka http://localhost:3000/dashboard. Dashboard contoh tidak membutuhkan database.
+
+## Demo publik
+
+Menambahkan workflow GitHub Pages dan mode ekspor statis khusus dengan base path `/crm-telko`. Root langsung menampilkan dashboard; route modul dapat diakses langsung sebagai file statis. Mode server Next.js tetap tersedia untuk tahap backend selanjutnya. Hasil build server/statik serta pemeriksaan HTTP dan aset dicatat pada laporan. Deployment memerlukan Source: GitHub Actions pada Settings → Pages.

@@ -26,7 +26,8 @@ const icons = {
   integrations: Plug,
 };
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const path = usePathname();
+  const pathname = usePathname();
+  const path = pathname === "/" ? "/dashboard" : pathname.replace(/\/$/, "");
   const [open, setOpen] = useState(false);
   const title = navigation.find((item) => item.href === path)?.label ?? "CRM";
   return (

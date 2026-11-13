@@ -1,4 +1,10 @@
-import { redirect } from "next/navigation";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { DashboardOverview } from "@/modules/dashboard/components/dashboard-overview";
+
 export default function Home() {
-  redirect("/dashboard");
+  return (
+    <DashboardShell>
+      <DashboardOverview />
+    </DashboardShell>
+  );
 }

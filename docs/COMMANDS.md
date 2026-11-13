@@ -46,3 +46,14 @@ Tidak menjalankan `db:deploy`/`db:migrate` karena PostgreSQL dan kredensial tida
 - Perintah push yang sama untuk `feat/crm-foundation`: berhasil; source dan dokumentasi tersedia pada feature branch.
 - Plugin GitHub `create_pull_request`: berhasil membuat https://github.com/doees/crm-telko/pull/1 dengan base main, head feat/crm-foundation, draft=true, merged=false.
 - Laporan diperbarui untuk menandai kendala akses sebagai selesai, lalu di-commit dan di-push ke feature branch yang sama. Tidak ada perubahan source aplikasi pada kelanjutan ini; pemeriksaan lokal yang sudah lulus tetap berlaku.
+
+## Menjalankan aplikasi dan menyiapkan Pages
+
+- `gh run list --repo doees/crm-telko ...`: keempat workflow sebelum perubahan Pages telah selesai success.
+- `gh api repos/doees/crm-telko/pages`: 404, Pages belum dikonfigurasi.
+- `npm run lint && npm run typecheck && npm run build`: exit 0 setelah perubahan routing/config Pages.
+- `npm start -- --port 3100`: server Next.js berhasil berjalan. Pemeriksaan GET melalui Python urllib pada tujuh route menghasilkan HTTP 200 dan HTML sesuai; route tidak dikenal menghasilkan 404. Proses dihentikan setelah pemeriksaan.
+- `GITHUB_PAGES=true npm run build`: exit 0, ekspor statis berhasil.
+- Pemeriksaan HTMLParser terhadap index, dashboard, lima modul dan 404: semua file JS/CSS lokal tersedia dan seluruh URL internal diprefix `/crm-telko/`.
+- `gh api --method POST repos/doees/crm-telko/pages -f build_type=workflow`: ditolak HTTP 403 `Resource not accessible by integration`. Ini pembatasan izin API GitHub, bukan penolakan approval sandbox. Pengguna diminta mengaktifkan Source: GitHub Actions melalui Settings → Pages.
+- Workflow deployment dan dokumentasi dikirim ke feature branch yang sama. Tidak menyimpan hasil build maupun kredensial dalam Git.
