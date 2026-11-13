@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f7f9;
+  --foreground: #1c2938;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+select {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 3px solid #0d9488;
+  outline-offset: 4px;
+}
+.panel {
+  background: white;
+  border: 1px solid #e7ebef;
+  border-radius: 16px;
+  box-shadow: 0 2px 5px #1c293803;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: #7b8795;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  color: #74808e;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.sidebar-link:hover {
+  background: #f4f7f7;
+  color: #155e59;
+}
+.sidebar-link.active {
+  background: #e8f4ef;
+  color: #15775e;
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
