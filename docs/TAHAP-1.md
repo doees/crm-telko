@@ -104,3 +104,9 @@ Hasil pemeriksaan tambahan:
 - Percobaan mengaktifkan Pages melalui API ditolak HTTP 403 `Resource not accessible by integration`. Pengguna diminta memilih Settings → Pages → Source: GitHub Actions. Sampai layanan Pages diaktifkan dan deployment berhasil, target https://doees.github.io/crm-telko/ belum dinyatakan live.
 
 Batas hosting: Pages hanya melayani demo statis dengan data contoh. PostgreSQL, query Prisma, API dan autentikasi memerlukan hosting server tersendiri ketika dikembangkan. Pemeriksaan HTTP/HTML bukan QA browser visual atau pengujian interaksi JavaScript.
+
+## Penyesuaian publikasi setelah Pages diaktifkan
+
+Pengguna mengaktifkan Pages dengan Source GitHub Actions. Retry deployment mengungkap aturan environment github-pages hanya mengizinkan main. Aturan tersebut dipertahankan. Workflow publikasi dipindahkan ke push main, dan source diterbitkan melalui PR yang sudah disiapkan, setelah pemeriksaan CI. Ini memenuhi permintaan pengguna untuk repository lengkap dan demo publik tanpa push source langsung ke main.
+
+Ditambahkan `scripts/verify_public_site.py` untuk pemeriksaan langsung URL publik: tujuh halaman, aset JS/CSS dan respons 404. Workflow menjalankannya setelah deployment. Status dan bukti final ada di workflow [Publish CRM demo to GitHub Pages](https://github.com/doees/crm-telko/actions) dan environment github-pages. Koneksi database dan QA browser visual tetap di luar pemeriksaan HTTP.

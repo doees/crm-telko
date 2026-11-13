@@ -57,3 +57,11 @@ Tidak menjalankan `db:deploy`/`db:migrate` karena PostgreSQL dan kredensial tida
 - Pemeriksaan HTMLParser terhadap index, dashboard, lima modul dan 404: semua file JS/CSS lokal tersedia dan seluruh URL internal diprefix `/crm-telko/`.
 - `gh api --method POST repos/doees/crm-telko/pages -f build_type=workflow`: ditolak HTTP 403 `Resource not accessible by integration`. Ini pembatasan izin API GitHub, bukan penolakan approval sandbox. Pengguna diminta mengaktifkan Source: GitHub Actions melalui Settings → Pages.
 - Workflow deployment dan dokumentasi dikirim ke feature branch yang sama. Tidak menyimpan hasil build maupun kredensial dalam Git.
+
+## Pages aktif dan publikasi melalui PR
+
+- `gh api repos/doees/crm-telko/pages`: Pages sudah aktif, build_type=workflow, public=true, HTTPS aktif.
+- Retry hanya job gagal melalui plugin GitHub berhasil dijadwalkan, tetapi environment menolak branch feat/crm-foundation karena hanya main yang diizinkan.
+- Pemeriksaan environment dan branch policies: main merupakan satu-satunya branch deployment yang diizinkan. Tidak mengubah atau menonaktifkan perlindungan environment.
+- Workflow disesuaikan agar deploy dari main. Perubahan masuk melalui PR setelah CI; tidak memakai force push atau admin bypass.
+- `scripts/verify_public_site.py` ditambahkan dan dijalankan setelah deploy untuk membuktikan URL publik serta aset dapat diakses.

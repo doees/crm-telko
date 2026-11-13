@@ -18,7 +18,7 @@ Halaman Pelanggan, Paket, Langganan, Tiket, dan Integrasi hanya penanda tahap be
 Clone feature branch, lalu jalankan dari root repository:
 
 ```bash
-git clone --branch feat/crm-foundation https://github.com/doees/crm-telko.git
+git clone https://github.com/doees/crm-telko.git
 cd crm-telko
 npm ci
 npm run dev
@@ -114,7 +114,7 @@ Lihat [laporan tahap 1](docs/TAHAP-1.md) dan [catatan perintah](docs/COMMANDS.md
 
 Target: https://doees.github.io/crm-telko/
 
-Workflow `.github/workflows/pages.yml` membangun dan menerbitkan dashboard contoh dari `feat/crm-foundation`. Branch main tetap menjadi dasar review PR. GitHub Pages dikonfigurasi dengan Source **GitHub Actions**. Build memakai `GITHUB_PAGES=true`, `output: export`, `basePath: /crm-telko` dan trailing slash agar akses langsung ke setiap halaman bekerja.
+Workflow `.github/workflows/pages.yml` membangun dan menerbitkan dashboard contoh dari `main` setelah perubahan masuk melalui Pull Request. Ini mengikuti aturan environment github-pages yang hanya mengizinkan main. GitHub Pages dikonfigurasi dengan Source **GitHub Actions**. Build memakai `GITHUB_PAGES=true`, `output: export`, `basePath: /crm-telko` dan trailing slash agar akses langsung ke setiap halaman bekerja.
 
 GitHub Pages hanya menyajikan HTML/CSS/JavaScript statis. Demo tidak menjalankan PostgreSQL, Prisma query, autentikasi atau API. Mode Next.js server tetap tersedia dengan build normal tanpa `GITHUB_PAGES`; gunakan hosting Node.js dan PostgreSQL ketika tahap backend dimulai.
 
@@ -125,3 +125,11 @@ GITHUB_PAGES=true npm run build
 ```
 
 Pada PowerShell: `$env:GITHUB_PAGES="true"; npm run build`. Hasil statis berada di `out/` (diabaikan Git). Hapus variabel `GITHUB_PAGES` sebelum menjalankan build server. Untuk build normal gunakan `npm run build`, kemudian `npm start`.
+
+Workflow publikasi juga memeriksa HTTP pada tujuh halaman, aset JS/CSS, dan respons 404. Pemeriksaan publik dapat diulang dengan Python 3:
+
+```bash
+python3 scripts/verify_public_site.py
+```
+
+Pemeriksaan ini memverifikasi HTTP/HTML/aset; belum menggantikan QA visual dan interaksi browser.
