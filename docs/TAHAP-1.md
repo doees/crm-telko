@@ -2,7 +2,7 @@
 
 ## Lokasi dan lingkup
 
-Aplikasi disiapkan sebagai repository mandiri dengan source di root, sesuai koreksi pengguna. Repository tujuan: `doees/crm-telko` (https://github.com/doees/crm-telko). Pemeriksaan clone dan metadata GitHub menunjukkan repository kosong, tanpa branch, commit, atau file pengguna. Implementasi berada pada `feat/crm-foundation`; main diinisialisasi hanya dengan README pengantar sebagai dasar Pull Request. Source aplikasi tidak dimasukkan langsung ke main.
+Aplikasi disiapkan sebagai repository mandiri dengan source di root, sesuai koreksi pengguna. Repository tujuan: `doees/crm-telko` (https://github.com/doees/crm-telko). Pemeriksaan clone dan metadata GitHub menunjukkan repository kosong, tanpa branch, commit, atau file pengguna. Implementasi berada pada `feat/crm-foundation`; main lokal diinisialisasi hanya dengan README pengantar sebagai dasar Pull Request. Source aplikasi tidak dimasukkan langsung ke main. Repository remote masih kosong karena izin tulis koneksi GitHub ditolak.
 
 Source mencakup Next.js 16.4.6 App Router, React 19, TypeScript strict, Tailwind CSS 4, sidebar responsif, dashboard data contoh, ringkasan layanan, grafik, distribusi paket, pencarian tabel pelanggan, tiket contoh, dan halaman penanda modul berikutnya. Tanggal dan seluruh angka merupakan snapshot demo fiktif. Tidak ada autentikasi, CRUD, API bisnis, integrasi Keuangan/SCM, atau worker. Folder modul mendatang berisi `.gitkeep`.
 
@@ -31,7 +31,7 @@ Pemeriksaan ulang dilakukan pada source repository mandiri dengan instalasi baru
 ## Kendala
 
 1. Repository tujuan awal keliru. Draft PR lama ditutup tanpa merge; aplikasi dipisahkan dari riwayat dan file project lama.
-2. API GitHub menolak pembuatan repository baru dengan HTTP 403. Pengguna kemudian menyediakan `https://github.com/doees/crm-telko.git`; repository diperiksa dan menjadi satu-satunya tujuan pengiriman implementasi mandiri ini.
+2. API GitHub menolak pembuatan repository baru dengan HTTP 403. Pengguna kemudian menyediakan `https://github.com/doees/crm-telko.git`; repository diperiksa dan menjadi satu-satunya tujuan pengiriman implementasi mandiri ini. Push melalui Git serta pembuatan README pengantar melalui plugin GitHub sama-sama ditolak HTTP 403. Repository baru belum tercantum pada daftar repository yang dapat diakses koneksi. Pengguna perlu mengaktifkan akses aplikasi GitHub ke repository baru sebelum push/PR dapat dilanjutkan.
 3. Cache npm default tidak writable; cache dipindahkan ke workspace tanpa mengubah permission home.
 4. Database belum tersedia; tidak mengarang kredensial atau mengklaim migration sudah diterapkan.
 5. Browser tool managed tidak tersedia; checklist QA manual disediakan di README.
@@ -39,7 +39,7 @@ Pemeriksaan ulang dilakukan pada source repository mandiri dengan instalasi baru
 
 ## Menjalankan dan review
 
-Lihat [README](../README.md) untuk instalasi, konfigurasi database, checklist mobile/desktop dan perintah verifikasi. Catatan perintah tersedia di [COMMANDS.md](COMMANDS.md). Draft PR disiapkan dari `feat/crm-foundation` ke `main` pada `doees/crm-telko`; tidak ada merge otomatis.
+Lihat [README](../README.md) untuk instalasi, konfigurasi database, checklist mobile/desktop dan perintah verifikasi. Catatan perintah tersedia di [COMMANDS.md](COMMANDS.md). Isi draft PR disiapkan di `docs/PR-DESCRIPTION.md` untuk `feat/crm-foundation` ke `main` pada `doees/crm-telko`. PR belum dapat dibuka karena kode belum dapat dikirim. Tidak ada merge otomatis.
 
 ## Daftar file
 

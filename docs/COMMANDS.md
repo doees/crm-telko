@@ -34,5 +34,7 @@ Tidak menjalankan `db:deploy`/`db:migrate` karena PostgreSQL dan kredensial tida
 - Direktori clone kosong disimpan terpisah sebagai bukti pemeriksaan; source mandiri yang sudah diuji ditempatkan di `/workspace/work/crm-telko`.
 - Remote `origin` diset ke `https://github.com/doees/crm-telko.git`. Tidak ada remote Primarizki pada repository mandiri.
 - `git add .`, `git diff --cached --check`, commit implementasi pada feature branch. Push menggunakan credential helper `gh auth git-credential`; token tidak disimpan dalam file.
-- Push `main` hanya untuk README pengantar commit awal, lalu push `feat/crm-foundation` berisi source aplikasi. Tidak ada merge aplikasi ke main.
-- Draft PR dibuat melalui plugin GitHub pada repository baru; URL dan hasil CI dilaporkan pada penyerahan.
+- Percobaan push `main` (README pengantar commit awal) ditolak HTTP 403 `Permission to doees/crm-telko.git denied to doees`. Push feature branch tidak dijalankan karena perintah pertama gagal. Tidak ada source yang dikirim atau merge aplikasi ke main.
+- Konfirmasi melalui plugin GitHub `get_repo` berhasil membaca metadata, tetapi repository baru belum muncul pada `list_repositories`. Percobaan `create_file` untuk README pengantar juga ditolak HTTP 403 `Resource not accessible by integration`.
+- Remote masih kosong. Draft PR dan workflow CI pada repository baru belum tersedia; menunggu pengguna mengaktifkan akses instalasi GitHub ke `crm-telko` melalui https://github.com/settings/installations.
+- Commit implementasi lokal `9d8c0ae` berada pada `feat/crm-foundation`; dokumentasi kendala pengiriman disimpan dalam commit berikutnya.
