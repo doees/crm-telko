@@ -36,5 +36,13 @@ Tidak menjalankan `db:deploy`/`db:migrate` karena PostgreSQL dan kredensial tida
 - `git add .`, `git diff --cached --check`, commit implementasi pada feature branch. Push menggunakan credential helper `gh auth git-credential`; token tidak disimpan dalam file.
 - Percobaan push `main` (README pengantar commit awal) ditolak HTTP 403 `Permission to doees/crm-telko.git denied to doees`. Push feature branch tidak dijalankan karena perintah pertama gagal. Tidak ada source yang dikirim atau merge aplikasi ke main.
 - Konfirmasi melalui plugin GitHub `get_repo` berhasil membaca metadata, tetapi repository baru belum muncul pada `list_repositories`. Percobaan `create_file` untuk README pengantar juga ditolak HTTP 403 `Resource not accessible by integration`.
-- Remote masih kosong. Draft PR dan workflow CI pada repository baru belum tersedia; menunggu pengguna mengaktifkan akses instalasi GitHub ke `crm-telko` melalui https://github.com/settings/installations.
+- Saat akses belum diaktifkan, remote masih kosong dan PR belum dapat dibuat. Status ini diselesaikan pada bagian penyerahan berikut.
 - Commit implementasi lokal `9d8c0ae` berada pada `feat/crm-foundation`; dokumentasi kendala pengiriman disimpan dalam commit berikutnya.
+
+## Penyerahan setelah akses diaktifkan — 14 November 2026 (Asia/Jakarta)
+
+- Pemeriksaan ulang `git status --short`, `git remote -v`, `git log -3 --oneline`, dan `git ls-remote origin`: source bersih, remote yang benar, belum ada refs pengguna yang perlu dipertahankan.
+- `git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push --set-upstream origin main`: berhasil; main hanya berisi README pengantar (`2a7e353`).
+- Perintah push yang sama untuk `feat/crm-foundation`: berhasil; source dan dokumentasi tersedia pada feature branch.
+- Plugin GitHub `create_pull_request`: berhasil membuat https://github.com/doees/crm-telko/pull/1 dengan base main, head feat/crm-foundation, draft=true, merged=false.
+- Laporan diperbarui untuk menandai kendala akses sebagai selesai, lalu di-commit dan di-push ke feature branch yang sama. Tidak ada perubahan source aplikasi pada kelanjutan ini; pemeriksaan lokal yang sudah lulus tetap berlaku.
