@@ -34,7 +34,7 @@ for attempt in range(12):
     time.sleep(5)
 
 assets = set()
-for route in ['', 'dashboard/', 'customers/', 'packages/', 'subscriptions/', 'tickets/', 'integrations/']:
+for route in ['', 'dashboard/', 'customers/', 'packages/', 'subscriptions/', 'tickets/', 'integrations/', 'reports/', 'settings/']:
     with urlopen(urljoin(BASE, route), timeout=20) as response:
         html = response.read().decode()
         assert response.status == 200 and 'Nusa CRM' in html, route

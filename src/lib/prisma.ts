@@ -12,6 +12,7 @@ export function getPrisma(): PrismaClient {
     );
   }
   prismaClient ??= new PrismaClient();
-  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prismaClient;
+  if (process.env.NODE_ENV !== "production")
+    globalForPrisma.prisma = prismaClient;
   return prismaClient;
 }

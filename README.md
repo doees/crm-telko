@@ -1,21 +1,35 @@
-# Nusa CRM — Tahap 1
+# Nusa CRM · Connected Workspace
 
-Fondasi aplikasi CRM telekomunikasi untuk final project Integrasi Aplikasi Korporasi, kelompok 5 orang. Aplikasi berada di root repository mandiri; tidak membawa file maupun riwayat Git project lain.
+Demo CRM telekomunikasi dengan tampilan portal operator: sidebar navy, aksen merah, katalog paket fiber, dan antarmuka responsif untuk desktop maupun mobile. Dikembangkan sebagai final project Integrasi Aplikasi Korporasi.
 
-## Lingkup
+**Demo publik:** https://doees.github.io/crm-telko/
 
-Next.js App Router, TypeScript strict, Tailwind CSS 4, dashboard responsif, navigasi mobile, data contoh fiktif, Prisma dan konfigurasi PostgreSQL. Pencarian pada tabel dan pilihan periode grafik bekerja hanya pada data contoh. Tanggal dashboard adalah snapshot demo 13 November 2026. Grafik memakai indeks 0–100, bukan hitungan pelanggan. Nilai langganan merupakan estimasi, bukan kas diterima.
+![Dashboard Nusa CRM](docs/images/dashboard-desktop.png)
 
-Halaman Pelanggan, Paket, Langganan, Tiket, dan Integrasi hanya penanda tahap berikutnya. Belum ada autentikasi, otorisasi, CRUD, API bisnis, worker, seed database, atau koneksi Keuangan/SCM. Jangan memasukkan data pelanggan nyata ke demo ini.
+## Yang bisa dicoba
 
-## Prasyarat
+| Menu | Fitur yang berfungsi |
+|---|---|
+| Ringkasan | Metrik dari data tersimpan, grafik periode 3/6 bulan, distribusi paket, pelanggan terbaru, tiket prioritas |
+| Pelanggan | Tambah, edit, aktif/nonaktif, profil dengan langganan dan tiket, pencarian, filter, pagination, CSV |
+| Paket layanan | Katalog rumah/bisnis, tambah/edit paket, aktif/nonaktif, pilihan paket pada langganan baru |
+| Langganan | Pendaftaran, harga kontrak tersimpan, invoice/perangkat otomatis, kesiapan aktivasi, suspend/resume/cancel |
+| Tiket bantuan | Pembuatan/edit, prioritas, penugasan teknisi, komentar, transisi penanganan sampai tutup |
+| Pusat integrasi | Invoice, callback pembayaran, permintaan perangkat, pemenuhan, simulasi offline, log event dan retry |
+| Laporan | Filter periode pendaftaran, nilai kontrak, pembayaran simulasi, ringkasan paket, CSV, jejak aktivitas |
+| Pengaturan | Simulasi empat peran, backup JSON, restore tervalidasi, reset dengan konfirmasi |
 
-- Node.js 22 LTS (lihat `.nvmrc`), npm, dan Git. Node 24 juga didukung.
-- PostgreSQL 16+ hanya diperlukan untuk pengujian database; dashboard dapat berjalan tanpa database.
+Notifikasi, pencarian pelanggan di header, navigasi mobile, dan detail data juga berfungsi. Seluruh identitas awal fiktif.
 
-## Instalasi dan menjalankan
+## Batas demo publik
 
-Clone feature branch, lalu jalankan dari root repository:
+GitHub Pages hanya melayani file statis. **Demo ini menyimpan data pada localStorage browser**, bukan PostgreSQL. Data tidak dibagikan antarperangkat atau antaranggota kelompok. Simulasi peran bukan login, autentikasi, atau kontrol keamanan server. Invoice/pembayaran/perangkat adalah simulasi; tidak ada transaksi uang atau panggilan API eksternal.
+
+Prisma/PostgreSQL dari fondasi tetap disediakan sebagai persiapan backend; schema database awal hanya mencakup Customer. Endpoint API server, autentikasi aman, seluruh model database, dan integrasi nyata belum diimplementasikan pada demo ini. Itu memerlukan hosting server, PostgreSQL serta kontrak/kredensial modul Keuangan/SCM. Jangan memakai data pelanggan nyata.
+
+## Menjalankan lokal
+
+Prasyarat: Node.js 22 LTS atau 24, npm, Git.
 
 ```bash
 git clone https://github.com/doees/crm-telko.git
@@ -24,112 +38,100 @@ npm ci
 npm run dev
 ```
 
-Buka http://localhost:3000; root langsung menampilkan dashboard. Tidak perlu `.env` untuk dashboard contoh. Instalasi menghasilkan Prisma Client secara otomatis tanpa menghubungi database.
+Buka http://localhost:3000. Semua menu demo bekerja tanpa `.env` atau koneksi database.
 
-Untuk production lokal:
+Mode production server lokal:
 
 ```bash
 npm run build
 npm start
 ```
 
-## Konfigurasi PostgreSQL
+## Coba satu alur penuh
 
-Tidak ada layanan atau kredensial database yang disediakan oleh repository. Siapkan PostgreSQL lokal/layanan milik tim dan buat database kosong, user, password serta hak aksesnya. Jangan gunakan identitas atau password rekaan sebagai kredensial layanan sebenarnya.
+1. Buka **Pelanggan → Tambah pelanggan** dan isi identitas fiktif.
+2. Buka **Langganan → Langganan baru**, pilih pelanggan dan paket. Invoice serta permintaan perangkat masuk antrean.
+3. Buka **Pusat integrasi → Invoice & pembayaran**, kirim invoice lalu pilih **Simulasikan lunas**.
+4. Pada tab **Pemenuhan perangkat**, kirim permintaan lalu pilih **Simulasikan terpenuhi**. Langganan aktif otomatis setelah kedua syarat selesai.
+5. Buka **Tiket bantuan**, buat tiket dan tugaskan teknisi. Mulai penanganan, tambahkan catatan, selesaikan dan tutup tiket.
+6. Lihat perubahan pada **Ringkasan** dan **Laporan**, lalu unduh CSV.
+7. Coba simulator offline dan retry pada integrasi. Callback berulang tidak menggandakan transaksi.
+8. Di **Pengaturan**, uji peran manajer/teknisi, backup dan restore. Untuk reset, kembali ke peran Administrator.
 
-```bash
-# macOS / Linux / Git Bash
-cp .env.example .env
-# Windows PowerShell: Copy-Item .env.example .env
-```
+Harga katalog yang diubah tidak mengubah harga kontrak langganan lama. Pembatalan langganan tidak otomatis membuat refund atau mengembalikan perangkat; demo menunjukkan kebutuhan rekonsiliasi terpisah.
 
-Edit `DATABASE_URL` di `.env` dengan **nilai milik Anda**. Format pada `.env.example` berisi placeholder; bukan konfigurasi siap koneksi. URL-encode karakter khusus pada user/password. Untuk layanan remote, ikuti parameter SSL dari penyedia. `.env` dan variasinya diabaikan Git kecuali `.env.example`.
-
-```bash
-npm run db:validate
-npm run db:generate
-npm run db:deploy
-npm run db:studio
-```
-
-`db:deploy` menerapkan migration awal tabel `customers`. Jalankan hanya setelah memeriksa target koneksi; gunakan database khusus proyek. Prisma Studio tersedia pada alamat yang dicetak CLI (umumnya http://localhost:5555). Keberhasilan `db:validate` dan `db:generate` saja tidak membuktikan koneksi database.
-
-Untuk perubahan schema pada tahap berikutnya:
-
-```bash
-npm run db:migrate -- --name nama_perubahan
-```
-
-`migrate dev` membutuhkan database pengembangan dan kemampuan membuat shadow database (atau konfigurasi shadow database khusus). Untuk menerapkan migration yang telah disimpan di Git, gunakan `db:deploy`. Jangan mengedit migration yang sudah diterapkan bersama. Dashboard tahap 1 tidak membaca tabel ini.
-
-## Struktur
-
-```text
-src/app/                         routing dan layout App Router
-src/app/(dashboard)/             dashboard dan halaman penanda modul
-src/app/api/v1/                  tempat API mendatang; masih kosong
-src/components/layout/           sidebar, header, navigasi responsif
-src/components/ui/, shared/      tempat komponen bersama mendatang
-src/modules/dashboard/           komponen dan fixture dashboard
-src/modules/{customers,packages,subscriptions,tickets}/
-                                 tempat modul mendatang
-src/lib/                        navigasi dan Prisma server-only
-src/integrations/{finance,scm,shared}/
-                                 tempat adapter mendatang
-src/workers/                     tempat worker mendatang
-prisma/                          schema dan migration PostgreSQL
- tests/{unit,integration,e2e}/    tempat pengujian mendatang
-```
-
-Folder mendatang berisi `.gitkeep` saja agar struktur tercatat tanpa implementasi prematur. Model awal `Customer` hanya fondasi skema; model paket, langganan, tiket, pengguna, outbox dan inbox ditambahkan bertahap beserta aturan bisnisnya.
-
-## Verifikasi
+## Pemeriksaan
 
 ```bash
 npm run lint
-npm run db:generate
 npm run typecheck
-npm run build
+npm test
+npm run test:e2e
 ```
 
-Pemeriksaan TypeScript menjalankan `next typegen` lebih dahulu agar tipe route tersedia pada checkout bersih sebelum build. Next.js memperbarui `next-env.d.ts` lokal saat build/dev; file tersebut diabaikan Git. CI menjalankan lint, generate, typecheck, build tanpa database atau secret.
-
-Pemeriksaan manual di browser:
-
-1. Buka `/` dan `/dashboard`; pastikan keduanya menampilkan dashboard.
-2. Cari `Andi`: satu pelanggan tampil; cari teks acak: pesan hasil kosong tampil.
-3. Ganti periode 6 bulan menjadi 3 bulan: grafik berubah.
-4. Buka setiap menu: halaman penanda tampil dan menu aktif sesuai URL.
-5. Pada lebar 390px, buka/tutup sidebar, pilih menu dan geser tabel secara horizontal bila perlu. Seluruh halaman tidak boleh meluap horizontal.
-6. Gunakan Tab untuk memeriksa fokus, skip link, tombol menu, pencarian, dan pilihan periode.
-7. Buka URL tidak dikenal; pastikan halaman 404 tampil.
-
-## GitHub dan kolaborasi
-
-Branch tahap ini: `feat/crm-foundation`. Ajukan Pull Request ke `main`; jangan merge tanpa review anggota kelompok. CI memeriksa aplikasi pada setiap Pull Request ke main dan push ke feature branch. Commit `package-lock.json` dan migration; jangan commit `.env`, `node_modules`, `.next`, atau kredensial.
-
-Lihat [laporan tahap 1](docs/TAHAP-1.md) dan [catatan perintah](docs/COMMANDS.md) untuk bukti pengerjaan dan batas validasi.
-
-## Demo publik GitHub Pages
-
-Target: https://doees.github.io/crm-telko/
-
-Workflow `.github/workflows/pages.yml` membangun dan menerbitkan dashboard contoh dari `main` setelah perubahan masuk melalui Pull Request. Ini mengikuti aturan environment github-pages yang hanya mengizinkan main. GitHub Pages dikonfigurasi dengan Source **GitHub Actions**. Build memakai `GITHUB_PAGES=true`, `output: export`, `basePath: /crm-telko` dan trailing slash agar akses langsung ke setiap halaman bekerja.
-
-GitHub Pages hanya menyajikan HTML/CSS/JavaScript statis. Demo tidak menjalankan PostgreSQL, Prisma query, autentikasi atau API. Mode Next.js server tetap tersedia dengan build normal tanpa `GITHUB_PAGES`; gunakan hosting Node.js dan PostgreSQL ketika tahap backend dimulai.
-
-Untuk membuat ekspor yang sama secara lokal (macOS/Linux/Git Bash):
+`test` menjalankan aturan bisnis dengan Node test runner melalui tsx. `test:e2e` membangun production server lalu menjalankan Chromium/Playwright pada port 3100. Hentikan server lain pada port tersebut. Jika Chromium belum tersedia:
 
 ```bash
-GITHUB_PAGES=true npm run build
+npx playwright install chromium
 ```
 
-Pada PowerShell: `$env:GITHUB_PAGES="true"; npm run build`. Hasil statis berada di `out/` (diabaikan Git). Hapus variabel `GITHUB_PAGES` sebelum menjalankan build server. Untuk build normal gunakan `npm run build`, kemudian `npm start`.
+Konfigurasi memakai `/usr/bin/chromium` bila tersedia, atau browser Playwright yang terpasang. Override dengan `PLAYWRIGHT_CHROMIUM_PATH` bila perlu. Di GitHub Actions, browser dan dependensi Linux dipasang melalui `playwright install --with-deps chromium`. Trace/screenshot kegagalan disimpan di `test-results/` dan diabaikan Git.
 
-Workflow publikasi juga memeriksa HTTP pada tujuh halaman, aset JS/CSS, dan respons 404. Pemeriksaan publik dapat diulang dengan Python 3:
+Untuk memeriksa deployment publik:
 
 ```bash
 python3 scripts/verify_public_site.py
 ```
 
-Pemeriksaan ini memverifikasi HTTP/HTML/aset; belum menggantikan QA visual dan interaksi browser.
+Pengujian browser publik dapat dijalankan dengan `E2E_BASE_URL=https://doees.github.io/crm-telko/ npm run test:e2e` (macOS/Linux/Git Bash). Pengujian hanya mengubah localStorage pada konteks browser pengujian, bukan data pengguna lain.
+
+## Struktur kode
+
+```text
+src/app/                         Next.js App Router dan layout
+src/components/layout/           sidebar, header, pencarian, notifikasi
+src/components/crm/              dialog, formulir, komponen dan helper bersama
+src/modules/crm/                 tipe, fixture, domain commands, store, context
+src/modules/dashboard/           ringkasan dan grafik
+src/modules/customers/           pengelolaan pelanggan
+src/modules/packages/            katalog paket
+src/modules/subscriptions/       layanan dan status aktivasi
+src/modules/tickets/             penanganan keluhan
+src/modules/integrations/        UI simulator Keuangan / SCM
+src/modules/reports/             laporan dan jejak aktivitas
+src/modules/settings/            peran demo, backup, restore, reset
+src/integrations/                tempat adapter server mendatang
+src/lib/prisma.ts                Prisma Client server-only (belum dipakai UI)
+prisma/                          schema/migration awal PostgreSQL
+scripts/verify_public_site.py    verifikasi HTTP deployment dan aset
+tests/unit/                      pengujian aturan bisnis
+tests/e2e/                       pengujian alur browser
+```
+
+Store memakai schema Zod untuk membaca data tersimpan dan backup, memeriksa relasi saat restore, serta menolak perubahan bila localStorage penuh/diblokir. Ekspor CSV melindungi input yang dapat dianggap formula spreadsheet. Data versi demo disimpan dengan key `nusa-crm-demo-v2`; tab pada origin yang sama menerima perubahan melalui storage event.
+
+## Konfigurasi PostgreSQL fondasi
+
+Untuk memeriksa fondasi backend saja, sediakan PostgreSQL 16+, database khusus proyek dan kredensial sendiri. Salin `.env.example` menjadi `.env`, lalu ganti seluruh placeholder `DATABASE_URL` dengan nilai nyata milik tim. URL-encode karakter khusus; ikuti kebutuhan SSL penyedia. Jangan commit `.env`.
+
+```bash
+npm run db:validate
+npm run db:generate
+npm run db:deploy
+```
+
+`db:deploy` hanya menerapkan migration awal Customer. Perintah ini tidak membuat seluruh backend demo. Keberhasilan schema validation/generate tidak membuktikan koneksi database. Dashboard demo tetap memakai data browser.
+
+## GitHub dan publikasi
+
+Perubahan dibuat pada feature branch, diperiksa oleh CI, lalu masuk melalui Pull Request. Workflow `ci.yml` memeriksa lint, typecheck, unit test, build dan E2E. Workflow `pages.yml` menerbitkan hasil ekspor dari `main`, sesuai aturan environment github-pages.
+
+Build Pages menggunakan `GITHUB_PAGES=true`, `output: export`, `basePath: /crm-telko`, dan trailing slash. Untuk ekspor lokal di macOS/Linux/Git Bash:
+
+```bash
+GITHUB_PAGES=true npm run build
+```
+
+Hasilnya di `out/`. Build server normal tetap tersedia tanpa variabel tersebut. GitHub Pages perlu Source **GitHub Actions**. Pemeriksaan HTTP dijalankan otomatis setelah deployment.
+
+Dokumentasi terbaru: [Demo lengkap](docs/DEMO-LENGKAP.md). Laporan [Tahap 1](docs/TAHAP-1.md) dan [catatan perintah sebelumnya](docs/COMMANDS.md) disimpan sebagai riwayat fondasi.

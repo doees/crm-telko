@@ -2,411 +2,428 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  Plus,
   ArrowUpRight,
   ArrowRight,
   Users,
+  Wifi,
   Layers,
   Headphones,
-  Wallet,
-  CalendarDays,
-  Search,
-  Wifi,
-  Plug,
-  CircleCheck,
+  Download,
+  ChevronRight,
+  ShieldCheck,
+  PlugZap,
+  TrendingUp,
+  CircleDollarSign,
 } from "lucide-react";
-import { demoCustomers, demoTickets, growth } from "../data/mock-dashboard";
-const metrics = [
-  {
-    label: "Total pelanggan",
-    value: "1.284",
-    change: "+12,8%",
-    note: "dari bulan lalu",
-    icon: Users,
-    color: "bg-teal-50 text-teal-700",
-  },
-  {
-    label: "Langganan aktif",
-    value: "1.156",
-    change: "+8,2%",
-    note: "dari bulan lalu",
-    icon: Layers,
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    label: "Tiket terbuka",
-    value: "24",
-    change: "8 prioritas tinggi",
-    note: "perlu ditindaklanjuti",
-    icon: Headphones,
-    color: "bg-orange-50 text-orange-500",
-  },
-  {
-    label: "Nilai langganan / bulan",
-    value: "Rp 346,8 jt",
-    change: "+6,4%",
-    note: "estimasi, bukan penerimaan",
-    icon: Wallet,
-    color: "bg-violet-50 text-violet-500",
-  },
-];
+import { useCrm } from "@/modules/crm/context";
+import { canWrite, shortMoney, dateLabel } from "@/modules/crm/domain";
+import { Avatar, Badge, PageHeading, Empty } from "@/components/crm/ui";
+import { CardTitle } from "@/components/crm/page-helpers";
 export function DashboardOverview() {
-  const [period, setPeriod] = useState<keyof typeof growth>("6 bulan");
-  const [query, setQuery] = useState("");
-  const chart = growth[period];
-  const customers = demoCustomers.filter((c) =>
-    `${c.name} ${c.number} ${c.email}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
+  const { state, open } = useCrm();
+  const [period, setPeriod] = useState("6");
+  const active = state.subscriptions.filter((s) => s.status === "ACTIVE");
+  const openTickets = state.tickets.filter((t) =>
+    ["OPEN", "IN_PROGRESS"].includes(t.status),
   );
+  const revenue = active.reduce((sum, s) => sum + s.price, 0);
+  const pending = state.subscriptions.filter(
+    (s) => s.status === "PENDING",
+  ).length;
+  const end = state.customers.reduce(
+    (latest, c) =>
+      c.createdAt.slice(0, 7) > latest ? c.createdAt.slice(0, 7) : latest,
+    "2026-11",
+  );
+  const months = Array.from({ length: Number(period) }, (_, i) => {
+    const d = new Date(`${end}-01T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() - Number(period) + i + 1);
+    return {
+      key: d.toISOString().slice(0, 7),
+      label: new Intl.DateTimeFormat("id-ID", {
+        month: "short",
+        timeZone: "UTC",
+      }).format(d),
+    };
+  });
+  const bars = months.map((m) => ({
+    ...m,
+    count: state.customers.filter((c) => c.createdAt.startsWith(m.key)).length,
+  }));
+  const max = Math.max(1, ...bars.map((b) => b.count));
+  const recent = [...state.customers]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 4);
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="eyebrow mb-2">OVERVIEW</p>
-          <h1 className="text-[28px] font-semibold tracking-[-1px] sm:text-[30px]">
-            Dashboard
-          </h1>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Selamat datang, Tim CRM. Berikut ringkasan layanan Anda.
+    <div className="page-stack">
+      <PageHeading
+        eyebrow="WORKSPACE OVERVIEW"
+        title="Ringkasan operasional"
+        description="Semua koneksi, pelanggan, dan layanan Anda. Dalam satu tempat."
+      >
+        <Link href="/reports" className="btn btn-secondary">
+          <Download size={16} />
+          Laporan
+        </Link>
+        <button
+          className="btn btn-primary"
+          disabled={!canWrite(state.role, "operations")}
+          onClick={() => open({ kind: "subscription" })}
+        >
+          <Plus size={17} />
+          Langganan baru
+        </button>
+      </PageHeading>
+      <section className="telecom-hero">
+        <div className="hero-copy">
+          <span className="hero-kicker">
+            <span />
+            NUSA CONNECTED EXPERIENCE
+          </span>
+          <h2>
+            Koneksi yang lebih baik.
+            <br />
+            Pelanggan yang lebih dekat.
+          </h2>
+          <p>
+            Kelola setiap perjalanan pelanggan, dari koneksi pertama
+            <br className="desktop-only" /> hingga layanan yang selalu bisa
+            diandalkan.
           </p>
+          <Link href="/customers" className="hero-link">
+            Jelajahi pelanggan <ArrowRight size={16} />
+          </Link>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[11px] text-slate-500">
-          <CalendarDays size={14} />
-          13 November 2026<span className="ml-1 text-slate-300">|</span>
-          <span className="text-teal-700">Snapshot demo</span>
+        <div className="hero-art" aria-hidden="true">
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+          <div className="orbit orbit-three" />
+          <div className="hero-router">
+            <Wifi size={60} strokeWidth={1.4} />
+            <span>CONNECTED</span>
+            <div>
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+          <div className="hero-chip chip-top">
+            <ShieldCheck size={19} />
+            <div>
+              <strong>Layanan terhubung</strong>
+              <span>Satu ekosistem CRM</span>
+            </div>
+          </div>
+          <div className="hero-chip chip-bottom">
+            <span className="signal-bars">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+            <div>
+              <strong>Selalu lebih dekat</strong>
+              <span>Customer-first experience</span>
+            </div>
+          </div>
+          <div className="hero-dot dot-one" />
+          <div className="hero-dot dot-two" />
         </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((m) => (
-          <article key={m.label} className="panel p-5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-medium text-slate-500">
-                {m.label}
-              </p>
-              <span
-                className={`grid size-9 place-items-center rounded-xl ${m.color}`}
-              >
-                <m.icon size={17} />
+      </section>
+      <div className="metric-grid">
+        {[
+          {
+            label: "Total pelanggan",
+            value: String(state.customers.length).padStart(2, "0"),
+            note: `${state.customers.filter((c) => c.status === "ACTIVE").length} pelanggan aktif`,
+            icon: Users,
+            color: "blue",
+          },
+          {
+            label: "Langganan aktif",
+            value: String(active.length).padStart(2, "0"),
+            note: `${pending} menunggu aktivasi`,
+            icon: Layers,
+            color: "violet",
+          },
+          {
+            label: "Tiket perlu perhatian",
+            value: String(openTickets.length).padStart(2, "0"),
+            note: `${openTickets.filter((t) => t.priority === "HIGH").length} prioritas tinggi`,
+            icon: Headphones,
+            color: "orange",
+          },
+          {
+            label: "Nilai langganan bulanan",
+            value: shortMoney(revenue),
+            note: "Estimasi kontrak aktif, bukan kas",
+            icon: CircleDollarSign,
+            color: "red",
+          },
+        ].map((m) => (
+          <article key={m.label} className="metric-card">
+            <div>
+              <span>{m.label}</span>
+              <span className={`metric-icon ${m.color}`}>
+                <m.icon size={20} />
               </span>
             </div>
-            <p className="mt-3 text-[29px] font-semibold tracking-[-1px]">
-              {m.value}
+            <strong>{m.value}</strong>
+            <p>
+              <span className="tiny-dot" />
+              {m.note}
             </p>
-            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[10px]">
-              <span
-                className={`inline-flex items-center gap-0.5 font-medium ${m.label === "Tiket terbuka" ? "text-orange-600" : "text-teal-700"}`}
-              >
-                {m.label !== "Tiket terbuka" && <ArrowUpRight size={12} />}{" "}
-                {m.change}
-              </span>
-              <span className="text-slate-400">{m.note}</span>
-            </div>
           </article>
         ))}
       </div>
-      <div className="grid gap-5 xl:grid-cols-[1.8fr_1fr]">
-        <section className="panel p-5 sm:p-6" aria-labelledby="growth-title">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 id="growth-title" className="text-sm font-semibold">
-                Pertumbuhan pelanggan
-              </h2>
-              <p className="mt-1.5 text-[11px] text-slate-400">
-                Perkembangan pelanggan pada periode contoh
-              </p>
-            </div>
+      <div className="dashboard-grid">
+        <section className="panel chart-card">
+          <CardTitle
+            title="Pertumbuhan pelanggan"
+            description="Pelanggan baru berdasarkan tanggal bergabung"
+          >
             <select
+              className="compact-select"
               aria-label="Periode grafik"
               value={period}
-              onChange={(e) => setPeriod(e.target.value as keyof typeof growth)}
-              className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] text-slate-500"
+              onChange={(e) => setPeriod(e.target.value)}
             >
-              <option>6 bulan</option>
-              <option>3 bulan</option>
+              <option value="6">6 bulan terakhir</option>
+              <option value="3">3 bulan terakhir</option>
             </select>
-          </div>
-          <div className="mt-5 flex items-center gap-3">
-            <span className="text-3xl font-semibold tracking-tight">
-              {chart.total}
+          </CardTitle>
+          <div className="chart-total">
+            <strong>{bars.reduce((sum, b) => sum + b.count, 0)}</strong>
+            <span>pelanggan baru pada periode ini</span>
+            <span className="chart-trend">
+              <TrendingUp size={14} />
+              Data tersimpan
             </span>
-            <span className="rounded bg-teal-50 px-2 py-1 text-[10px] font-medium text-teal-700">
-              {chart.change}
-            </span>
-            <span className="text-[10px] text-slate-400">pelanggan</span>
           </div>
           <div
-            className="relative mt-6 h-44 pl-8"
+            className="bar-chart"
             role="img"
-            aria-label={`Grafik contoh ${period}: ${chart.labels.map((month, i) => `${month} indeks ${chart.current[i]}`).join(", ")}. Indeks dinormalisasi, bukan jumlah pelanggan.`}
+            aria-label={bars
+              .map((b) => `${b.label}: ${b.count} pelanggan`)
+              .join(", ")}
           >
-            <div className="absolute inset-0 bottom-6 flex flex-col justify-between text-[9px] text-slate-400">
-              {[100, 75, 50, 25, 0].map((n) => (
-                <div key={n} className="flex items-center gap-3">
-                  <span className="w-5">{n}</span>
-                  <span className="grow border-t border-dashed border-slate-100" />
+            <div className="chart-guides">
+              {[max, Math.round(max / 2), 0].map((n, i) => (
+                <span key={i}>
+                  {n}
+                  <i />
+                </span>
+              ))}
+            </div>
+            <div className="chart-columns">
+              {bars.map((b, i) => (
+                <div className="chart-column" key={b.key}>
+                  <div className="bar-space">
+                    <div
+                      className={
+                        i === bars.length - 1
+                          ? "chart-bar current"
+                          : "chart-bar"
+                      }
+                      style={{
+                        height: `${(b.count / max) * 100}%`,
+                        minHeight: b.count ? 8 : 0,
+                      }}
+                    >
+                      <span>{b.count}</span>
+                    </div>
+                  </div>
+                  <span>{b.label}</span>
                 </div>
               ))}
             </div>
-            <div className="relative flex h-full items-end justify-around gap-4">
-              {chart.labels.map((label, i) => (
-                <div
-                  key={label}
-                  className="flex h-full flex-1 flex-col items-center justify-end"
-                >
-                  <div className="flex h-[calc(100%-24px)] w-full max-w-14 items-end justify-center gap-1.5">
+          </div>
+          <div className="chart-legend">
+            <span />
+            <p>Pelanggan baru</p>
+            <small>Jumlah aktual pada data demo</small>
+          </div>
+        </section>
+        <section className="panel distribution-card">
+          <CardTitle
+            title="Pilihan pelanggan"
+            description="Distribusi langganan aktif per paket"
+          />
+          <div className="distribution-summary">
+            <div className="mini-ring">
+              <Wifi size={29} />
+            </div>
+            <div>
+              <strong>{active.length}</strong>
+              <span>layanan aktif</span>
+            </div>
+            <span className="soft-pill">
+              {state.packages.filter((p) => p.status === "ACTIVE").length} paket
+            </span>
+          </div>
+          <div className="package-distribution">
+            {state.packages.slice(0, 5).map((p, i) => {
+              const count = active.filter((s) => s.packageId === p.id).length;
+              return (
+                <div key={p.id}>
+                  <div>
+                    <span className={`distribution-dot dot-${i % 4}`} />
+                    <span>{p.name.replace("Nusa ", "")}</span>
+                    <strong>{count}</strong>
+                  </div>
+                  <div className="progress-track">
                     <span
-                      className="w-1/3 rounded-t-[4px] bg-[#d5eae0]"
-                      style={{ height: `${chart.previous[i]}%` }}
-                    />
-                    <span
-                      className="w-1/3 rounded-t-[4px] bg-[#278367]"
-                      style={{ height: `${chart.current[i]}%` }}
+                      className={`progress-${i % 4}`}
+                      style={{
+                        width: `${active.length ? (count / active.length) * 100 : 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="mt-3 h-3 text-[9px] text-slate-400">
-                    {label}
-                  </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-[9px] text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <i className="size-2 rounded-sm bg-[#278367]" />
-              Periode ini
-            </span>
-            <span className="flex items-center gap-1.5">
-              <i className="size-2 rounded-sm bg-[#d5eae0]" />
-              Pembanding
-            </span>
-            <span className="text-slate-400">Indeks demo (0–100)</span>
-          </div>
-        </section>
-        <section className="panel p-5 sm:p-6">
-          <h2 className="text-sm font-semibold">Distribusi paket</h2>
-          <p className="mt-1.5 text-[11px] text-slate-400">
-            Berdasarkan 1.156 langganan aktif contoh
-          </p>
-          <div className="my-6 flex justify-center">
-            <div
-              role="img"
-              aria-label="Nusa Family 45 persen, Nusa Home 35 persen, Nusa Business 20 persen"
-              className="grid size-36 place-items-center rounded-full"
-              style={{
-                background:
-                  "conic-gradient(#278367 0% 45%, #80b9a2 45% 80%, #e1eee7 80% 100%)",
-              }}
-            >
-              <div className="grid size-28 place-content-center rounded-full bg-white text-center">
-                <span className="text-2xl font-semibold tracking-tight">
-                  1.156
-                </span>
-                <span className="mt-1 text-[9px] text-slate-400">
-                  Langganan aktif
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {[
-              {
-                name: "Nusa Family",
-                count: "520",
-                percent: "45%",
-                color: "#278367",
-              },
-              {
-                name: "Nusa Home",
-                count: "405",
-                percent: "35%",
-                color: "#80b9a2",
-              },
-              {
-                name: "Nusa Business",
-                count: "231",
-                percent: "20%",
-                color: "#e1eee7",
-              },
-            ].map((p) => (
-              <div key={p.name} className="flex items-center gap-2 text-[11px]">
-                <span
-                  className="size-2 rounded-full"
-                  style={{ background: p.color }}
-                />
-                <span className="text-slate-500">{p.name}</span>
-                <span className="ml-auto font-medium">{p.count}</span>
-                <span className="w-9 text-right text-slate-400">
-                  {p.percent}
-                </span>
-              </div>
-            ))}
-          </div>
+          <Link href="/packages" className="card-bottom-link">
+            Lihat semua paket <ArrowUpRight size={15} />
+          </Link>
         </section>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[1.8fr_1fr]">
-        <section className="panel min-w-0 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-6">
-            <div>
-              <h2 className="text-sm font-semibold">Pelanggan terbaru</h2>
-              <p className="mt-1.5 text-[11px] text-slate-400">
-                Kenali pelanggan yang baru bergabung
-              </p>
-            </div>
-            <Link
-              href="/customers"
-              className="inline-flex items-center gap-1 text-[10px] font-medium text-teal-700"
-            >
-              Lihat modul <ArrowUpRight size={13} />
+      <div className="dashboard-grid">
+        <section className="panel latest-card">
+          <CardTitle
+            title="Pelanggan terbaru"
+            description="Setiap koneksi dimulai dari hubungan yang baik"
+          >
+            <Link href="/customers" className="text-link">
+              Lihat semua <ArrowRight size={14} />
             </Link>
-          </div>
-          <div className="mx-5 mb-4 flex max-w-xs items-center gap-2 rounded-lg border border-slate-200 px-3 sm:mx-6">
-            <Search size={14} className="text-slate-400" />
-            <input
-              aria-label="Cari pelanggan contoh"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari nama atau nomor pelanggan…"
-              className="min-w-0 flex-1 bg-transparent py-2 text-[11px] outline-none"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[530px] text-left text-[10px]">
-              <caption className="sr-only">
-                Pelanggan terbaru, seluruh data fiktif
-              </caption>
-              <thead className="border-y border-slate-100 bg-slate-50/60 text-[9px] font-medium text-slate-400">
+          </CardTitle>
+          <div className="table-scroll">
+            <table>
+              <thead>
                 <tr>
-                  <th scope="col" className="px-6 py-3 font-medium">
-                    PELANGGAN
-                  </th>
-                  <th scope="col" className="py-3 font-medium">
-                    PAKET LAYANAN
-                  </th>
-                  <th scope="col" className="py-3 font-medium">
-                    STATUS
-                  </th>
-                  <th scope="col" className="pr-5 font-medium">
-                    BERGABUNG
+                  <th>Pelanggan</th>
+                  <th>Paket layanan</th>
+                  <th>Status</th>
+                  <th>Bergabung</th>
+                  <th>
+                    <span className="sr-only">Detail</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {customers.map((c) => (
-                  <tr
-                    key={c.number}
-                    className="border-b border-slate-100 last:border-0"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className={`grid size-8 shrink-0 place-items-center rounded-full text-[9px] font-semibold ${c.color}`}
-                        >
-                          {c.initials}
-                        </span>
-                        <div>
-                          <p className="font-semibold">{c.name}</p>
-                          <p className="mt-1 text-[9px] text-slate-400">
-                            {c.number}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                {recent.map((c, i) => (
+                  <tr key={c.id}>
                     <td>
-                      <p className="font-medium">{c.package}</p>
-                      <p className="mt-1 text-[9px] text-slate-400">
-                        {c.speed}
-                      </p>
-                    </td>
-                    <td>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] ${c.status === "Aktif" ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700"}`}
+                      <button
+                        className="customer-cell"
+                        onClick={() =>
+                          open({ kind: "customer-detail", id: c.id })
+                        }
                       >
-                        <span
-                          className={`size-1 rounded-full ${c.status === "Aktif" ? "bg-teal-600" : "bg-amber-500"}`}
-                        />
-                        {c.status}
-                      </span>
+                        <Avatar name={c.name} index={i} />
+                        <span>
+                          <strong>{c.name}</strong>
+                          <small>{c.number}</small>
+                        </span>
+                      </button>
                     </td>
-                    <td className="pr-5 text-[9px] text-slate-500">{c.date}</td>
+                    <td>
+                      {state.packages
+                        .find(
+                          (p) =>
+                            p.id ===
+                            state.subscriptions.find(
+                              (s) =>
+                                s.customerId === c.id &&
+                                s.status !== "CANCELLED",
+                            )?.packageId,
+                        )
+                        ?.name.replace("Nusa ", "") ?? "Belum berlangganan"}
+                    </td>
+                    <td>
+                      <Badge status={c.status} />
+                    </td>
+                    <td className="muted-cell">{dateLabel(c.createdAt)}</td>
+                    <td>
+                      <button
+                        className="icon-button"
+                        aria-label={`Detail ${c.name}`}
+                        onClick={() =>
+                          open({ kind: "customer-detail", id: c.id })
+                        }
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {customers.length === 0 && (
-              <p
-                role="status"
-                className="p-8 text-center text-xs text-slate-500"
-              >
-                Tidak ada pelanggan contoh yang cocok.
-              </p>
-            )}
-          </div>
-          <div
-            className="border-t border-slate-100 px-6 py-3 text-[9px] text-slate-400"
-            aria-live="polite"
-          >
-            Menampilkan {customers.length} dari {demoCustomers.length} pelanggan
-            contoh
           </div>
         </section>
-        <div className="space-y-5">
-          <section className="panel p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Tiket perlu perhatian</h2>
-              <span className="rounded-md bg-orange-50 px-2 py-1 text-[9px] text-orange-600">
-                3 contoh
-              </span>
-            </div>
-            <div className="mt-4 divide-y divide-slate-100">
-              {demoTickets.map((t) => (
-                <div key={t.id} className="py-3 first:pt-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[9px] text-slate-400">#{t.id}</span>
-                    <span
-                      className={`rounded px-1.5 py-1 text-[8px] ${t.color}`}
-                    >
-                      {t.priority}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[11px] font-medium">{t.title}</p>
-                  <p className="mt-1 text-[9px] text-slate-400">{t.customer}</p>
-                </div>
-              ))}
-            </div>
-            <Link
-              href="/tickets"
-              className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-medium text-teal-700"
-            >
-              Buka modul tiket <ArrowRight size={12} />
-            </Link>
-          </section>
-          <section className="rounded-2xl border border-teal-100 bg-[#edf5f0] p-5">
-            <div className="flex items-center gap-2">
-              <Plug size={15} className="text-teal-700" />
-              <h2 className="text-xs font-semibold">Koneksi antar modul</h2>
-            </div>
-            <p className="mt-2 text-[10px] leading-5 text-slate-500">
-              Keuangan dan SCM akan terhubung pada tahap integrasi.
-            </p>
-            <div className="mt-3 flex gap-2">
-              {["Keuangan", "SCM"].map((label) => (
+        <section className="panel attention-card">
+          <CardTitle
+            title="Butuh perhatian"
+            description="Prioritas untuk pengalaman yang lebih baik"
+          >
+            <span className="count-chip">{openTickets.length}</span>
+          </CardTitle>
+          {openTickets.length ? (
+            openTickets.slice(0, 3).map((t) => (
+              <button
+                key={t.id}
+                className="attention-ticket"
+                onClick={() => open({ kind: "ticket-detail", id: t.id })}
+              >
                 <span
-                  key={label}
-                  className="rounded-md border border-teal-100 bg-white/70 px-2 py-1 text-[9px] text-slate-500"
-                >
-                  {label} · Belum terhubung
+                  className={`ticket-indicator priority-${t.priority.toLowerCase()}`}
+                />
+                <span>
+                  <small>
+                    {t.number} ·{" "}
+                    {state.customers.find((c) => c.id === t.customerId)?.name}
+                  </small>
+                  <strong>{t.subject}</strong>
+                  <span>{t.assignee}</span>
                 </span>
-              ))}
-            </div>
-          </section>
+                <ChevronRight size={15} />
+              </button>
+            ))
+          ) : (
+            <Empty
+              title="Semua tertangani"
+              description="Tidak ada tiket terbuka saat ini."
+            />
+          )}
+          <Link href="/tickets" className="card-bottom-link">
+            Buka pusat bantuan <ArrowUpRight size={15} />
+          </Link>
+        </section>
+      </div>
+      <section className="integration-strip">
+        <span className="integration-strip-icon">
+          <PlugZap size={25} />
+        </span>
+        <div>
+          <h3>Satu ekosistem, banyak kemungkinan.</h3>
+          <p>Hubungkan alur pelanggan, pembayaran, dan pemenuhan perangkat.</p>
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
-        <CircleCheck size={13} className="text-teal-600" />
-        Mode demonstrasi aktif<span className="mx-1 text-slate-300">·</span>
-        <Wifi size={13} />
-        Seluruh angka dan identitas merupakan data fiktif.
-      </div>
+        <div className="connection-chips">
+          <span>
+            <i className={state.connections.FINANCE ? "online" : "offline"} />
+            Keuangan
+          </span>
+          <span>
+            <i className={state.connections.SCM ? "online" : "offline"} />
+            SCM
+          </span>
+        </div>
+        <Link href="/integrations" className="btn btn-secondary">
+          Kelola integrasi <ArrowRight size={15} />
+        </Link>
+      </section>
     </div>
   );
 }
