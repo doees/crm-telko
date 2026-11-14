@@ -1,3 +1,5 @@
+> Arsip historis sebelum server v1.0. Instruksi dan hasil versi saat ini: [README](../README.md), [laporan server](SERVER-IMPLEMENTATION.md). Klaim demo/localStorage dalam arsip ini tidak menggambarkan runtime v1.0.
+
 ## Perubahan
 
 Membangun fondasi CRM telekomunikasi sebagai aplikasi mandiri pada root repository baru. Menggunakan Next.js App Router, TypeScript strict, Tailwind CSS, dashboard responsif, data contoh, pencarian pelanggan contoh, pilihan periode grafik, dan halaman penanda modul berikutnya.

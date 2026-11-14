@@ -25,12 +25,7 @@ export const ticketInput = z.object({
     .min(10, "Deskripsi minimal 10 karakter")
     .max(3000),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  assignee: z.enum([
-    "Belum ditugaskan",
-    "Raka Wijaya",
-    "Nadia Putri",
-    "Fajar Akbar",
-  ]),
+  assignee: z.string().min(1).max(100),
 });
 export type CustomerInput = z.infer<typeof customerInput>;
 export type PackageInput = z.infer<typeof packageInput>;
@@ -70,7 +65,7 @@ export type Invoice = {
   number: string;
   subscriptionId: string;
   amount: number;
-  status: "PENDING" | "ISSUED" | "PAID";
+  status: "PENDING" | "ISSUED" | "PAID" | "VOID";
   createdAt: string;
   externalId?: string;
   paidAt?: string;
@@ -78,7 +73,8 @@ export type Invoice = {
 export type Fulfillment = {
   id: string;
   subscriptionId: string;
-  status: "PENDING" | "PROCESSING" | "FULFILLED";
+  status: "PENDING" | "PROCESSING" | "FULFILLED" | "CANCELLED";
+  externalStatus?: string;
   externalId?: string;
 };
 export type IntegrationEvent = {
@@ -86,7 +82,7 @@ export type IntegrationEvent = {
   destination: "FINANCE" | "SCM";
   resourceId: string;
   type: string;
-  status: "PENDING" | "FAILED" | "SUCCEEDED";
+  status: "PENDING" | "PROCESSING" | "FAILED" | "SUCCEEDED";
   attempts: number;
   createdAt: string;
   error?: string;
@@ -111,6 +107,7 @@ export type CrmState = {
   processedCallbacks: string[];
   activity: Activity[];
   connections: { FINANCE: boolean; SCM: boolean };
+  team?: { id: string; name: string; role: Role; isActive: boolean }[];
 };
 export type Command =
   | { type: "SAVE_CUSTOMER"; id?: string; data: CustomerInput }
@@ -128,11 +125,8 @@ export type Command =
   | { type: "TICKET_STATUS"; id: string; status: Ticket["status"] }
   | { type: "TICKET_ASSIGN"; id: string; assignee: Ticket["assignee"] }
   | { type: "TICKET_COMMENT"; id: string; text: string }
-  | { type: "DISPATCH"; id: string }
-  | { type: "PAY_INVOICE"; id: string; callbackId: string }
-  | { type: "FULFILL"; id: string; callbackId: string }
-  | { type: "CONNECTION"; destination: "FINANCE" | "SCM"; connected: boolean }
-  | { type: "ROLE"; role: Role };
+  | { type: "DISPATCH"; id: string };
+
 export type Modal =
   | { kind: "customer" | "package" | "ticket"; id?: string }
   | { kind: "subscription"; customerId?: string; packageId?: string }
@@ -145,12 +139,6 @@ export type Modal =
 export const roleLabels: Record<Role, string> = {
   ADMIN: "Administrator",
   CS: "Customer service",
-  TECHNICIAN: "Teknisi · Raka",
+  TECHNICIAN: "Teknisi",
   MANAGER: "Manajer",
 };
-export const technicians = [
-  "Belum ditugaskan",
-  "Raka Wijaya",
-  "Nadia Putri",
-  "Fajar Akbar",
-] as const;

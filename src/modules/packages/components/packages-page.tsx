@@ -184,8 +184,8 @@ export function PackagesPage() {
       <div className="info-note">
         <ShieldCheck size={18} />
         <span>
-          Harga adalah nilai kontrak contoh per bulan. Perubahan katalog tidak
-          mengubah harga langganan yang sudah berjalan.
+          Harga adalah nilai kontrak per bulan. Perubahan katalog tidak mengubah
+          harga langganan yang sudah berjalan.
         </span>
       </div>
     </div>

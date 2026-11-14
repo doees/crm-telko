@@ -4,7 +4,7 @@ import { CrmProvider } from "@/modules/crm/provider";
 export const metadata: Metadata = {
   title: { default: "Dashboard | Nusa CRM", template: "%s | Nusa CRM" },
   description:
-    "Nusa CRM — demo interaktif manajemen pelanggan, langganan, dan layanan telekomunikasi.",
+    "Nusa CRM — manajemen pelanggan, langganan, dan layanan telekomunikasi.",
 };
 export default function RootLayout({
   children,

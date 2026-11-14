@@ -15,7 +15,7 @@ import {
   pageItems,
 } from "@/components/crm/page-helpers";
 export function TicketsPage() {
-  const { state, open } = useCrm();
+  const { state, user, open } = useCrm();
   const list = useList();
   const [priority, setPriority] = useState("ALL");
   const [mine, setMine] = useState(false);
@@ -23,7 +23,7 @@ export function TicketsPage() {
     (t) =>
       (list.filter === "ALL" || list.filter === t.status) &&
       (priority === "ALL" || priority === t.priority) &&
-      (!mine || t.assignee === "Raka Wijaya") &&
+      (!mine || t.assignee === user?.id) &&
       `${t.number} ${t.subject} ${state.customers.find((c) => c.id === t.customerId)?.name}`
         .toLowerCase()
         .includes(list.search.toLowerCase()),
@@ -93,7 +93,7 @@ export function TicketsPage() {
                   list.setPage(1);
                 }}
               />
-              Tugas Raka
+              Ditugaskan ke saya
             </label>
           </div>
         </div>
@@ -140,7 +140,8 @@ export function TicketsPage() {
                               .map((n) => n[0])
                               .join("")}
                       </span>
-                      {t.assignee}
+                      {state.team?.find((u) => u.id === t.assignee)?.name ??
+                        t.assignee}
                     </span>
                   </td>
                   <td>

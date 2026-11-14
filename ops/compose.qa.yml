@@ -1,0 +1,5 @@
+# Isolated image smoke test: --env-file .env.test -p nusa-crm-image-qa
+services:
+  crm:
+    ports:
+      - 127.0.0.1:3200:3000

@@ -36,6 +36,7 @@ export const statusLabels: Record<string, string> = {
   RESOLVED: "Terselesaikan",
   CLOSED: "Ditutup",
   PAID: "Lunas",
+  VOID: "Dibatalkan",
   ISSUED: "Belum dibayar",
   PROCESSING: "Diproses",
   FULFILLED: "Terpenuhi",
@@ -71,6 +72,7 @@ export function applyCommand(
   command: Command,
   now = new Date().toISOString(),
   id = () => crypto.randomUUID(),
+  actor?: { id: string; name: string },
 ): CrmState {
   const state = structuredClone(source);
   const record = (text: string, category: Activity["category"]) =>
@@ -80,16 +82,13 @@ export function applyCommand(
     ? "ticket"
     : command.type.includes("SUBSCRIPTION")
       ? "operations"
-      : ["DISPATCH", "PAY_INVOICE", "FULFILL", "CONNECTION"].includes(
-            command.type,
-          )
+      : ["DISPATCH"].includes(command.type)
         ? "integration"
         : "master";
-  if (command.type !== "ROLE")
-    requireThat(
-      canWrite(role, area),
-      "Peran simulasi Anda tidak memiliki akses untuk tindakan ini.",
-    );
+  requireThat(
+    canWrite(role, area),
+    "Akun Anda tidak memiliki akses untuk tindakan ini.",
+  );
   const autoActivate = (subscriptionId: string) => {
     const sub = state.subscriptions.find((s) => s.id === subscriptionId);
     if (
@@ -111,9 +110,6 @@ export function applyCommand(
     }
   };
   switch (command.type) {
-    case "ROLE":
-      state.role = command.role;
-      break;
     case "SAVE_CUSTOMER": {
       const data = customerInput.parse(command.data);
       requireThat(
@@ -216,7 +212,10 @@ export function applyCommand(
       state.subscriptions.unshift(sub);
       const invoice = {
         id: id(),
-        number: nextNumber(state.invoices, "INV-2026"),
+        number: nextNumber(
+          state.invoices,
+          `INV-${new Date(now).getUTCFullYear()}`,
+        ),
         subscriptionId: sub.id,
         amount: p.price,
         status: "PENDING" as const,
@@ -328,7 +327,7 @@ export function applyCommand(
       const t = state.tickets.find((t) => t.id === command.id);
       requireThat(t, "Tiket tidak ditemukan.");
       requireThat(
-        role !== "TECHNICIAN" || t.assignee === "Raka Wijaya",
+        role !== "TECHNICIAN" || t.assignee === (actor?.id ?? ""),
         "Teknisi hanya dapat menangani tiket yang ditugaskan kepadanya.",
       );
       const allowed = {
@@ -376,7 +375,7 @@ export function applyCommand(
       const t = state.tickets.find((t) => t.id === command.id);
       requireThat(t, "Tiket tidak ditemukan.");
       requireThat(
-        role !== "TECHNICIAN" || t.assignee === "Raka Wijaya",
+        role !== "TECHNICIAN" || t.assignee === (actor?.id ?? ""),
         "Teknisi hanya dapat mengomentari tiketnya sendiri.",
       );
       requireThat(
@@ -389,122 +388,15 @@ export function applyCommand(
       );
       t.comments.push({
         id: id(),
-        author:
-          role === "TECHNICIAN"
-            ? "Raka Wijaya"
-            : role === "CS"
-              ? "Customer service"
-              : "Administrator",
+        author: actor?.name ?? "Sistem",
         text: command.text.trim(),
         at: now,
       });
       record(`Catatan penanganan ditambahkan pada ${t.number}`, "ticket");
       break;
     }
-    case "CONNECTION":
-      state.connections[command.destination] = command.connected;
-      record(
-        `Simulator ${command.destination}: ${command.connected ? "online" : "offline"}`,
-        "integration",
-      );
-      break;
-    case "DISPATCH": {
-      const e = state.events.find((e) => e.id === command.id);
-      requireThat(e, "Event tidak ditemukan.");
-      requireThat(
-        e.status !== "SUCCEEDED",
-        "Event ini sudah berhasil; tidak dikirim ulang.",
-      );
-      const targetSubId =
-        e.destination === "FINANCE"
-          ? state.invoices.find((i) => i.id === e.resourceId)?.subscriptionId
-          : state.fulfillments.find((f) => f.id === e.resourceId)
-              ?.subscriptionId;
-      requireThat(
-        state.subscriptions.find((s) => s.id === targetSubId)?.status !==
-          "CANCELLED",
-        "Langganan dibatalkan; event memerlukan rekonsiliasi manual.",
-      );
-      e.attempts++;
-      if (!state.connections[e.destination]) {
-        e.status = "FAILED";
-        e.error = "Simulator tidak tersedia. Aktifkan koneksi lalu coba ulang.";
-        record(
-          `Pengiriman ${e.type} gagal (percobaan ${e.attempts})`,
-          "integration",
-        );
-        break;
-      }
-      e.status = "SUCCEEDED";
-      delete e.error;
-      if (e.destination === "FINANCE") {
-        const i = state.invoices.find((i) => i.id === e.resourceId);
-        requireThat(i, "Invoice tidak ditemukan.");
-        if (i.status === "PENDING") {
-          i.status = "ISSUED";
-          i.externalId = `FIN-${i.id}`;
-        }
-      } else {
-        const f = state.fulfillments.find((f) => f.id === e.resourceId);
-        requireThat(f, "Permintaan perangkat tidak ditemukan.");
-        if (f.status === "PENDING") {
-          f.status = "PROCESSING";
-          f.externalId = `SCM-${f.id}`;
-        }
-      }
-      record(`${e.type} diterima simulator ${e.destination}`, "integration");
-      break;
-    }
-    case "PAY_INVOICE": {
-      if (state.processedCallbacks.includes(command.callbackId)) return source;
-      requireThat(
-        state.connections.FINANCE,
-        "Simulator Keuangan sedang offline.",
-      );
-      const i = state.invoices.find((i) => i.id === command.id);
-      requireThat(i, "Invoice tidak ditemukan.");
-      requireThat(
-        i.status === "ISSUED",
-        "Kirim permintaan invoice terlebih dahulu.",
-      );
-      requireThat(
-        state.subscriptions.find((s) => s.id === i.subscriptionId)?.status !==
-          "CANCELLED",
-        "Langganan dibatalkan. Pembayaran memerlukan rekonsiliasi manual.",
-      );
-      i.status = "PAID";
-      i.paidAt = now;
-      state.processedCallbacks.push(command.callbackId);
-      record(
-        `${i.number}: pembayaran diterima melalui callback simulasi`,
-        "integration",
-      );
-      autoActivate(i.subscriptionId);
-      break;
-    }
-    case "FULFILL": {
-      if (state.processedCallbacks.includes(command.callbackId)) return source;
-      requireThat(state.connections.SCM, "Simulator SCM sedang offline.");
-      const f = state.fulfillments.find((f) => f.id === command.id);
-      requireThat(f, "Pemenuhan tidak ditemukan.");
-      requireThat(
-        f.status === "PROCESSING",
-        "Kirim permintaan perangkat terlebih dahulu.",
-      );
-      requireThat(
-        state.subscriptions.find((s) => s.id === f.subscriptionId)?.status !==
-          "CANCELLED",
-        "Langganan dibatalkan. Pemenuhan memerlukan rekonsiliasi manual.",
-      );
-      f.status = "FULFILLED";
-      state.processedCallbacks.push(command.callbackId);
-      record(
-        `Perangkat ${f.externalId} terpenuhi melalui callback simulasi`,
-        "integration",
-      );
-      autoActivate(f.subscriptionId);
-      break;
-    }
+    case "DISPATCH":
+      throw new Error("Pengiriman event diproses worker server.");
   }
   state.activity = state.activity.slice(0, 200);
   state.revision++;

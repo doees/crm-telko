@@ -1,3 +1,5 @@
+> Arsip historis sebelum server v1.0. Instruksi dan hasil versi saat ini: [README](../README.md), [laporan server](SERVER-IMPLEMENTATION.md). Klaim demo/localStorage dalam arsip ini tidak menggambarkan runtime v1.0.
+
 # Catatan perintah — repository mandiri
 
 ## Koreksi lokasi repository

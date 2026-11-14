@@ -1,0 +1,115 @@
+name: nusa-crm
+x-runtime: &runtime
+  image: nusa-crm:server
+  build: .
+  env_file: ${CRM_ENV_FILE:-.env}
+  restart: unless-stopped
+  stop_grace_period: 30s
+  init: true
+x-crm-env: &crm-env
+  NODE_ENV: production
+  PORT: 3000
+  DATABASE_URL: postgresql://crm_app:${CRM_DB_PASSWORD:?Generate .env first}@db:5432/${CRM_DATABASE_NAME:-crm}
+  FINANCE_DATABASE_URL: postgresql://finance_app:${FINANCE_DB_PASSWORD:?Generate .env first}@db:5432/${FINANCE_DATABASE_NAME:-finance}
+  SCM_DATABASE_URL: postgresql://scm_app:${SCM_DB_PASSWORD:?Generate .env first}@db:5432/${SCM_DATABASE_NAME:-scm}
+  FINANCE_API_URL: http://finance:4101
+  SCM_API_URL: http://scm:4102
+  CRM_CALLBACK_BASE_URL: http://crm:3000
+services:
+  db:
+    image: postgres:16-alpine
+    env_file: ${CRM_ENV_FILE:-.env}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      CRM_DATABASE_NAME: ${CRM_DATABASE_NAME:-crm}
+      FINANCE_DATABASE_NAME: ${FINANCE_DATABASE_NAME:-finance}
+      SCM_DATABASE_NAME: ${SCM_DATABASE_NAME:-scm}
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./ops/init-databases.sh:/docker-entrypoint-initdb.d/10-create.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    <<: *runtime
+    restart: "no"
+    environment:
+      <<: *crm-env
+      BOOTSTRAP_IF_EMPTY: "true"
+    command: [node, --import, tsx, scripts/init-stack.ts]
+    depends_on:
+      db:
+        condition: service_healthy
+  crm:
+    <<: *runtime
+    environment: *crm-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  worker:
+    <<: *runtime
+    environment: *crm-env
+    command: [node, --import, tsx, src/server/worker.ts]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  finance:
+    <<: *runtime
+    environment:
+      SERVICE_KIND: finance
+      PORT: 4101
+      SERVICE_DATABASE_URL: postgresql://finance_app:${FINANCE_DB_PASSWORD}@db:5432/${FINANCE_DATABASE_NAME:-finance}
+      CRM_CALLBACK_BASE_URL: http://crm:3000
+    command: [node, --import, tsx, services/server.ts]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4101/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  scm:
+    <<: *runtime
+    environment:
+      SERVICE_KIND: scm
+      PORT: 4102
+      SERVICE_DATABASE_URL: postgresql://scm_app:${SCM_DB_PASSWORD}@db:5432/${SCM_DATABASE_NAME:-scm}
+      CRM_CALLBACK_BASE_URL: http://crm:3000
+    command: [node, --import, tsx, services/server.ts]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4102/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set owned domain}
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      crm:
+        condition: service_healthy
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

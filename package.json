@@ -1,14 +1,14 @@
 {
   "name": "telecom-crm",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": ">=22.0.0 <25"
+    "node": ">=22.9.0 <25"
   },
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0",
+    "dev": "node --env-file-if-exists=.env node_modules/next/dist/bin/next dev --hostname 0.0.0.0",
     "build": "next build",
-    "start": "next start",
+    "start": "node --env-file-if-exists=.env node_modules/next/dist/bin/next start --hostname 0.0.0.0",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "prisma generate",
@@ -16,9 +16,16 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && prisma generate --schema services/prisma/schema.prisma",
     "test": "tsx --test tests/unit/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "worker": "tsx --env-file-if-exists=.env src/server/worker.ts",
+    "finance": "tsx --env-file-if-exists=.env services/start-finance.ts",
+    "scm": "tsx --env-file-if-exists=.env services/start-scm.ts",
+    "admin:create": "tsx --env-file-if-exists=.env scripts/bootstrap-admin.ts",
+    "db:services": "node --env-file-if-exists=.env scripts/migrate-services.mjs",
+    "setup:env": "node scripts/setup-env.mjs",
+    "test:server": "node scripts/test-server.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",

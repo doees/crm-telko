@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SERVICE_DATABASE_URL")
+}
+
+model ServiceInvoice {
+  id                 String   @id @default(uuid()) @db.Uuid
+  crmResourceId      String   @unique
+  subscriptionNumber String
+  customerName       String
+  amount             Decimal  @db.Decimal(14, 0)
+  currency           String   @default("IDR")
+  status             String   @default("ISSUED")
+  version            Int      @default(1)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
+  payment            Payment?
+}
+
+model Payment {
+  id        String         @id @default(uuid()) @db.Uuid
+  invoiceId String         @unique @db.Uuid
+  invoice   ServiceInvoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  amount    Decimal        @db.Decimal(14, 0)
+  reference String         @unique
+  actorId   String
+  paidAt    DateTime       @db.Timestamptz(3)
+  createdAt DateTime       @default(now()) @db.Timestamptz(3)
+}
+
+model StockItem {
+  sku       String               @id
+  name      String
+  onHand    Int                  @default(0)
+  reserved  Int                  @default(0)
+  requests  FulfillmentRequest[]
+  movements StockMovement[]
+}
+
+model StockMovement {
+  id        String    @id @default(uuid()) @db.Uuid
+  sku       String
+  stock     StockItem @relation(fields: [sku], references: [sku], onDelete: Restrict)
+  quantity  Int
+  reference String    @unique
+  actorId   String
+  type      String
+  at        DateTime  @default(now()) @db.Timestamptz(3)
+}
+
+model FulfillmentRequest {
+  id                 String    @id @default(uuid()) @db.Uuid
+  crmResourceId      String    @unique
+  subscriptionNumber String
+  customerName       String
+  address            String
+  sku                String
+  stock              StockItem @relation(fields: [sku], references: [sku], onDelete: Restrict)
+  quantity           Int       @default(1)
+  status             String    @default("WAITING_STOCK")
+  version            Int       @default(1)
+  deliveryReference  String?   @unique
+  recipient          String?
+  deliveredAt        DateTime? @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+}
+
+model IdempotencyRequest {
+  key      String   @id
+  hash     String
+  response Json
+  at       DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Callback {
+  id            String    @id @default(uuid()) @db.Uuid
+  payload       Json
+  status        String    @default("PENDING")
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime? @default(now()) @db.Timestamptz(3)
+  lockedUntil   DateTime? @db.Timestamptz(3)
+  leaseToken    String?
+  lastError     String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt])
+}

@@ -1,0 +1,982 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Nusa Finance and SCM Service APIs",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4101",
+      "description": "Local Finance"
+    },
+    {
+      "url": "http://localhost:4102",
+      "description": "Local SCM"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Service database health",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "Both"
+        ]
+      }
+    },
+    "/v1/invoices": {
+      "get": {
+        "summary": "List invoices",
+        "parameters": [],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "Finance"
+        ]
+      },
+      "post": {
+        "summary": "Create idempotently",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "crmResourceId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "subscriptionNumber": {
+                    "type": "string"
+                  },
+                  "customerName": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 10000,
+                    "maximum": 100000000
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "IDR"
+                    ]
+                  }
+                },
+                "required": [
+                  "crmResourceId",
+                  "subscriptionNumber",
+                  "customerName",
+                  "amount",
+                  "currency"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/v1/invoices/{id}": {
+      "get": {
+        "summary": "Detail invoices",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/v1/requests": {
+      "get": {
+        "summary": "List requests",
+        "parameters": [],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      },
+      "post": {
+        "summary": "Create idempotently",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "crmResourceId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "subscriptionNumber": {
+                    "type": "string"
+                  },
+                  "customerName": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "sku": {
+                    "type": "string",
+                    "enum": [
+                      "ONT-ROUTER"
+                    ]
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                },
+                "required": [
+                  "crmResourceId",
+                  "subscriptionNumber",
+                  "customerName",
+                  "address",
+                  "sku",
+                  "quantity"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/requests/{id}": {
+      "get": {
+        "summary": "Detail requests",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/invoices/{id}/payments": {
+      "post": {
+        "summary": "Record exact full manual payment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000000
+                  },
+                  "reference": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100
+                  },
+                  "paidAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "actorId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "reference",
+                  "paidAt",
+                  "actorId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/v1/invoices/{id}/void": {
+      "post": {
+        "summary": "Void unpaid invoice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/v1/inventory": {
+      "get": {
+        "summary": "Inventory and recent movements",
+        "parameters": [],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/inventory/receipts": {
+      "post": {
+        "summary": "Receive stock and reserve waiting orders",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "reference": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100
+                  },
+                  "sku": {
+                    "type": "string",
+                    "enum": [
+                      "ONT-ROUTER"
+                    ]
+                  },
+                  "actorId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "quantity",
+                  "reference",
+                  "sku",
+                  "actorId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/requests/{id}/deliver": {
+      "post": {
+        "summary": "Deliver reserved stock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 100
+                  },
+                  "actorId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "reference",
+                  "recipient",
+                  "actorId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/requests/{id}/cancel": {
+      "post": {
+        "summary": "Cancel before delivery",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "tags": [
+          "SCM"
+        ]
+      }
+    },
+    "/v1/callbacks": {
+      "get": {
+        "summary": "Recent callback delivery metadata",
+        "parameters": [],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "tags": [
+          "Both"
+        ]
+      }
+    },
+    "/v1/callbacks/retry": {
+      "post": {
+        "summary": "Requeue failed callbacks",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success: JSON data envelope"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden/invalid CSRF/Origin"
+          },
+          "409": {
+            "description": "Conflict or invalid transition"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Invalid input"
+          },
+          "429": {
+            "description": "Login throttled"
+          },
+          "502": {
+            "description": "Upstream unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "tags": [
+          "Both"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

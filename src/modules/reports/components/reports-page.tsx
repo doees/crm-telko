@@ -56,7 +56,7 @@ export function ReportsPage() {
     .filter((i) => ids.has(i.subscriptionId) && i.status === "PAID")
     .reduce((sum, i) => sum + i.amount, 0);
   const unpaid = state.invoices
-    .filter((i) => ids.has(i.subscriptionId) && i.status !== "PAID")
+    .filter((i) => ids.has(i.subscriptionId) && ["PENDING", "ISSUED"].includes(i.status))
     .reduce((sum, i) => sum + i.amount, 0);
   return (
     <div className="page-stack">
@@ -106,7 +106,7 @@ export function ReportsPage() {
             note: "Harga kontrak layanan aktif",
           },
           {
-            label: "Pembayaran simulasi",
+            label: "Pembayaran tercatat",
             value: shortMoney(paid),
             icon: CreditCard,
             note: "Invoice yang ditandai lunas",
@@ -177,7 +177,7 @@ export function ReportsPage() {
       <section className="panel">
         <CardTitle
           title="Jejak aktivitas"
-          description="Perubahan operasional terbaru pada workspace demo"
+          description="Perubahan operasional terbaru pada workspace perusahaan"
         />
         <div className="activity-feed">
           {state.activity.slice(0, 30).map((a) => (

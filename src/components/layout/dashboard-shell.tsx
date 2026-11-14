@@ -43,7 +43,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [notices, setNotices] = useState(false);
-  const { state, open: openModal } = useCrm();
+  const { state, user, open: openModal } = useCrm();
   const title =
     navigation.find((item) => item.href === path)?.label ?? "Ringkasan";
   const activeTickets = state.tickets.filter((t) =>
@@ -64,7 +64,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", key);
-    return () => { window.removeEventListener("keydown", key); document.body.style.overflow = oldOverflow; };
+    return () => {
+      window.removeEventListener("keydown", key);
+      document.body.style.overflow = oldOverflow;
+    };
   }, [open]);
   return (
     <div className="app-shell">
@@ -175,7 +178,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           >
             <span className="profile-avatar">NT</span>
             <span>
-              <strong>Tim Nusa Telecom</strong>
+              <strong>{user?.name}</strong>
               <small>{roleLabels[state.role]}</small>
             </span>
             <Settings2 size={15} />
@@ -249,7 +252,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
             <span className="header-demo-label">
               <span />
-              Demo interaktif
+              Workspace aktif
             </span>
             <div className="notification-wrap">
               <button
@@ -292,7 +295,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <Link href="/settings" className="header-profile">
               <span className="header-avatar">NT</span>
               <span>
-                <strong>Tim Nusa</strong>
+                <strong>{user?.name}</strong>
                 <small>{roleLabels[state.role]}</small>
               </span>
               <ChevronDown size={13} />
@@ -308,9 +311,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </span>
             <span>
               <span className="tiny-dot" />
-              Data demo tersimpan di browser ini
+              Data tersinkronisasi dengan server
               <Link href="/settings">
-                Kelola data
+                Akun & akses
                 <ArrowUpRight size={11} />
               </Link>
             </span>

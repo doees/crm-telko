@@ -1,4 +1,4 @@
-name: CRM foundation checks
+name: CRM server checks
 on:
   pull_request:
     branches: [main]
@@ -9,23 +9,41 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm run db:generate
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - run: npm run test:server
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: browser-test-results
           path: test-results/
+  docker-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CRM_ENV_FILE: .env.test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: node scripts/setup-env.mjs --test
+      - run: docker compose --env-file .env.test -p nusa-crm-image-qa -f compose.yml -f ops/compose.qa.yml up -d --build crm worker finance scm
+      - run: node --env-file=.env.test scripts/smoke-compose.mjs
+      - name: Service logs on failure
+        if: failure()
+        run: docker compose --env-file .env.test -p nusa-crm-image-qa logs --tail=100 migrate crm worker finance scm
+      - name: Remove only isolated QA stack
+        if: always()
+        run: docker compose --env-file .env.test -p nusa-crm-image-qa down -v

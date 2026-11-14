@@ -1,0 +1,8 @@
+# Explicitly start crm worker finance scm; omit web (public HTTPS).
+services:
+  db:
+    ports:
+      - 127.0.0.1:55432:5432
+  crm:
+    ports:
+      - 127.0.0.1:3100:3000
