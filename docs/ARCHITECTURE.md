@@ -112,7 +112,7 @@ erDiagram
   }
 ```
 
-Masing-masing database memakai schema layanan yang sama, tetapi proses Keuangan hanya mengakses API invoice/payment dan proses SCM hanya inventori/fulfillment. Tabel yang tidak digunakan tetap kosong. Keduanya mempunyai `Callback` persisten dan `IdempotencyRequest`. Referensi resource CRM berupa ID eksternal; tidak ada FK atau query lintas database. Role aplikasi dipisah per database. Pemisahan ke mesin PostgreSQL berbeda bisa dilakukan dengan mengganti URL, tanpa perubahan kontrak REST.
+Masing-masing database memakai schema layanan yang sama, tetapi proses Keuangan hanya mengakses API invoice/payment dan proses SCM hanya inventori/fulfillment. Tabel yang tidak digunakan tetap kosong. Keduanya mempunyai `Callback` persisten dan `IdempotencyRequest`. Referensi resource CRM berupa ID eksternal; tidak ada FK atau query lintas database. Role aplikasi dipisah per database. Compose hanya memasukkan credential masing-masing database/token ke service pemiliknya; password superuser hanya ada pada container database. Pemisahan ke mesin PostgreSQL berbeda bisa dilakukan dengan mengganti URL, tanpa perubahan kontrak REST.
 
 ## Konsistensi dan kegagalan
 

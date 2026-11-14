@@ -41,6 +41,11 @@ jobs:
       - run: node scripts/setup-env.mjs --test
       - run: docker compose --env-file .env.test -p nusa-crm-image-qa -f compose.yml -f ops/compose.qa.yml up -d --build crm worker finance scm
       - run: node --env-file=.env.test scripts/smoke-compose.mjs
+      - name: Rehearse backup and restore in isolated databases
+        run: ./ops/test-backup.sh
+        env:
+          COMPOSE_PROJECT_NAME: nusa-crm-image-qa
+          COMPOSE_FILE: compose.yml:ops/compose.qa.yml
       - name: Service logs on failure
         if: failure()
         run: docker compose --env-file .env.test -p nusa-crm-image-qa logs --tail=100 migrate crm worker finance scm

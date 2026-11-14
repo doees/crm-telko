@@ -224,11 +224,16 @@ test("ticket handling, CSV export, and mobile viewport", async ({ page }) => {
     .click();
   d = page.getByRole("dialog");
   await d.getByRole("button", { name: "Mulai tangani" }).click();
+  await expect(d.locator(".ticket-meta")).toContainText("Ditangani");
   await d
     .getByLabel("Catatan penanganan", { exact: true })
     .fill("Koneksi telah diperiksa dan kondisi layanan normal.");
   await d.getByRole("button", { name: "Kirim catatan" }).click();
+  await expect(d.locator(".comment-list")).toContainText(
+    "Koneksi telah diperiksa dan kondisi layanan normal.",
+  );
   await d.getByRole("button", { name: "Selesaikan tiket" }).click();
+  await expect(d.locator(".ticket-meta")).toContainText("Terselesaikan");
   await d.getByRole("button", { name: "Tutup tiket", exact: true }).click();
   await expect(d.locator(".ticket-meta")).toContainText("Ditutup");
   await page.keyboard.press("Escape");

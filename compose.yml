@@ -2,26 +2,31 @@ name: nusa-crm
 x-runtime: &runtime
   image: nusa-crm:server
   build: .
-  env_file: ${CRM_ENV_FILE:-.env}
   restart: unless-stopped
   stop_grace_period: 30s
   init: true
 x-crm-env: &crm-env
   NODE_ENV: production
   PORT: 3000
+  APP_ORIGIN: ${APP_ORIGIN:?Set application origin}
   DATABASE_URL: postgresql://crm_app:${CRM_DB_PASSWORD:?Generate .env first}@db:5432/${CRM_DATABASE_NAME:-crm}
-  FINANCE_DATABASE_URL: postgresql://finance_app:${FINANCE_DB_PASSWORD:?Generate .env first}@db:5432/${FINANCE_DATABASE_NAME:-finance}
-  SCM_DATABASE_URL: postgresql://scm_app:${SCM_DB_PASSWORD:?Generate .env first}@db:5432/${SCM_DATABASE_NAME:-scm}
   FINANCE_API_URL: http://finance:4101
   SCM_API_URL: http://scm:4102
+  FINANCE_SERVICE_TOKEN: ${FINANCE_SERVICE_TOKEN:?Generate service token}
+  SCM_SERVICE_TOKEN: ${SCM_SERVICE_TOKEN:?Generate service token}
+  FINANCE_WEBHOOK_SECRET: ${FINANCE_WEBHOOK_SECRET:?Generate webhook secret}
+  SCM_WEBHOOK_SECRET: ${SCM_WEBHOOK_SECRET:?Generate webhook secret}
   CRM_CALLBACK_BASE_URL: http://crm:3000
 services:
   db:
     image: postgres:16-alpine
-    env_file: ${CRM_ENV_FILE:-.env}
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Generate database password}
+      CRM_DB_PASSWORD: ${CRM_DB_PASSWORD}
+      FINANCE_DB_PASSWORD: ${FINANCE_DB_PASSWORD:?Generate finance database password}
+      SCM_DB_PASSWORD: ${SCM_DB_PASSWORD:?Generate SCM database password}
       CRM_DATABASE_NAME: ${CRM_DATABASE_NAME:-crm}
       FINANCE_DATABASE_NAME: ${FINANCE_DATABASE_NAME:-finance}
       SCM_DATABASE_NAME: ${SCM_DATABASE_NAME:-scm}
@@ -39,7 +44,10 @@ services:
     restart: "no"
     environment:
       <<: *crm-env
-      BOOTSTRAP_IF_EMPTY: "true"
+      FINANCE_DATABASE_URL: postgresql://finance_app:${FINANCE_DB_PASSWORD}@db:5432/${FINANCE_DATABASE_NAME:-finance}
+      SCM_DATABASE_URL: postgresql://scm_app:${SCM_DB_PASSWORD}@db:5432/${SCM_DATABASE_NAME:-scm}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Set bootstrap email}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Generate bootstrap password}
     command: [node, --import, tsx, scripts/init-stack.ts]
     depends_on:
       db:
@@ -68,6 +76,8 @@ services:
       SERVICE_KIND: finance
       PORT: 4101
       SERVICE_DATABASE_URL: postgresql://finance_app:${FINANCE_DB_PASSWORD}@db:5432/${FINANCE_DATABASE_NAME:-finance}
+      FINANCE_SERVICE_TOKEN: ${FINANCE_SERVICE_TOKEN}
+      FINANCE_WEBHOOK_SECRET: ${FINANCE_WEBHOOK_SECRET}
       CRM_CALLBACK_BASE_URL: http://crm:3000
     command: [node, --import, tsx, services/server.ts]
     depends_on:
@@ -84,6 +94,8 @@ services:
       SERVICE_KIND: scm
       PORT: 4102
       SERVICE_DATABASE_URL: postgresql://scm_app:${SCM_DB_PASSWORD}@db:5432/${SCM_DATABASE_NAME:-scm}
+      SCM_SERVICE_TOKEN: ${SCM_SERVICE_TOKEN}
+      SCM_WEBHOOK_SECRET: ${SCM_WEBHOOK_SECRET}
       CRM_CALLBACK_BASE_URL: http://crm:3000
     command: [node, --import, tsx, services/server.ts]
     depends_on:

@@ -727,7 +727,7 @@ function SubscriptionDetail({ id, close }: { id: string; close: () => void }) {
   );
 }
 function TicketDetail({ id, close }: { id: string; close: () => void }) {
-  const { state, run, user } = useCrm();
+  const { state, run, user, busy } = useCrm();
   const [comment, setComment] = useState("");
   const t = state.tickets.find((t) => t.id === id);
   if (!t) return null;
@@ -763,7 +763,10 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
           <select
             value={t.assignee}
             disabled={
-              !writable || state.role === "TECHNICIAN" || t.status === "CLOSED"
+              busy ||
+              !writable ||
+              state.role === "TECHNICIAN" ||
+              t.status === "CLOSED"
             }
             onChange={(e) =>
               run({
@@ -830,7 +833,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={busy}>
               <Send size={15} />
               Kirim catatan
             </button>
@@ -846,6 +849,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
             {t.status === "OPEN" && (
               <button
                 className="btn btn-primary"
+                disabled={busy}
                 onClick={() =>
                   run({ type: "TICKET_STATUS", id, status: "IN_PROGRESS" })
                 }
@@ -856,6 +860,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
             {t.status === "IN_PROGRESS" && (
               <button
                 className="btn btn-primary"
+                disabled={busy || t.comments.length === 0}
                 onClick={() =>
                   run({ type: "TICKET_STATUS", id, status: "RESOLVED" })
                 }
@@ -867,6 +872,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
               <>
                 <button
                   className="btn btn-secondary"
+                  disabled={busy}
                   onClick={() =>
                     run({ type: "TICKET_STATUS", id, status: "IN_PROGRESS" })
                   }
@@ -876,6 +882,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
                 {state.role !== "TECHNICIAN" && (
                   <button
                     className="btn btn-primary"
+                    disabled={busy}
                     onClick={() =>
                       run({ type: "TICKET_STATUS", id, status: "CLOSED" })
                     }
@@ -892,7 +899,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
   );
 }
 export function CrmDialogs() {
-  const { modal, open, run } = useCrm();
+  const { modal, open, run, busy } = useCrm();
   const close = useCallback(() => open(null), [open]);
   if (!modal) return null;
   switch (modal.kind) {
@@ -946,6 +953,7 @@ export function CrmDialogs() {
             </button>
             <button
               className="btn btn-primary"
+              disabled={busy}
               onClick={async () => {
                 if (await run(modal.action)) close();
               }}

@@ -235,7 +235,7 @@ async function handle(
           422,
           "Tanggal pembayaran tidak boleh di masa depan.",
         );
-      return idem("payment:" + key, data, async (tx) => {
+      return idem("payment:" + key, { id, ...data }, async (tx) => {
         await tx.$queryRaw`SELECT id FROM "ServiceInvoice" WHERE id=${id}::uuid FOR UPDATE`;
         const invoice = await tx.serviceInvoice.findUniqueOrThrow({
           where: { id },

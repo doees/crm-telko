@@ -260,6 +260,7 @@ test(
     );
     assert.equal(snapshot.invoices.length, 1);
     assert.equal(snapshot.subscriptions[0].status, "PENDING");
+    const paymentKey = randomUUID();
     const paid = await call(
       `integrations/finance/invoices/${invoiceId}/payments`,
       "POST",
@@ -270,6 +271,7 @@ test(
         verified: true,
       },
       admin,
+      { "Idempotency-Key": paymentKey },
     );
     assert.equal(paid.response.status, 200);
     snapshot = await waitFor(
@@ -318,6 +320,31 @@ test(
       });
       assert.equal(external.payment?.reference, "BANK-QA-0001");
       assert.equal(await finance.payment.count(), 1);
+      const reusedKey = await fetch(
+        process.env.FINANCE_API_URL +
+          "/v1/invoices/" +
+          randomUUID() +
+          "/payments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + process.env.FINANCE_SERVICE_TOKEN,
+            "Idempotency-Key": paymentKey,
+          },
+          body: JSON.stringify({
+            amount: 349000,
+            reference: "BANK-QA-0001",
+            paidAt: external.payment!.paidAt.toISOString(),
+            actorId: external.payment!.actorId,
+          }),
+        },
+      );
+      assert.equal(
+        reusedKey.status,
+        409,
+        "Payment key must also bind the target invoice",
+      );
       const callback = await finance.callback.findFirstOrThrow({
         where: { payload: { path: ["type"], equals: "invoice.paid" } },
       });

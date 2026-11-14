@@ -69,7 +69,8 @@ Image Docker berhasil dibangun lokal dengan Node 22 Debian slim. Pemeriksaan sta
 2. Error async auth awalnya dapat melewati catch route. Endpoint auth sekarang menunggu promise sebelum memetakan status error.
 3. Konfigurasi port/base URL host dan jaringan Docker berbeda. Compose meng-override URL internal; CLI lokal memakai loopback dan env privat.
 4. Kapasitas disk Docker habis pada image penuh dan layer dependensi terduplikasi. Image slim, cache tmpfs dan layer gabungan berhasil dibangun. Yang dibersihkan hanya cache/artifact hasil kerja; data PostgreSQL tetap disimpan.
-5. Hosting Pages bersifat statis. Workflow server tidak lagi mengekspor dashboard ke Pages; halaman Pages menunjukkan status menunggu VPS/domain secara eksplisit.
+5. Pengujian browser ulang menemukan tombol penyelesaian tiket bisa ditekan saat catatan masih disimpan. Kontrol komentar/status kini disabled selama mutasi dan penyelesaian menunggu catatan tersimpan; pengujian memeriksa acknowledgment status server sebelum tindakan berikutnya.
+6. Hosting Pages bersifat statis. Workflow server tidak lagi mengekspor dashboard ke Pages; halaman Pages menunjukkan status menunggu VPS/domain secara eksplisit.
 
 ## Yang belum diprovisikan atau dihubungkan
 
