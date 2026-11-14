@@ -8,3 +8,7 @@ coverage/
 next-env.d.ts
 test-results/
 playwright-report/
+services/generated/
+.pgdata/
+backups/
+.qa/

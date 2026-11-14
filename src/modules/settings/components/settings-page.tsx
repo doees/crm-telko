@@ -1,230 +1,326 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Download,
-  ShieldCheck,
-  Settings2,
-  Upload,
-  RotateCcw,
-  Database,
+  Plus,
   LockKeyhole,
+  ShieldCheck,
+  Download,
+  LogOut,
+  Users,
 } from "lucide-react";
 import { useCrm } from "@/modules/crm/context";
-import { roleLabels, type Role } from "@/modules/crm/types";
-import { resetDemo, restoreDemo, downloadFile } from "@/modules/crm/store";
+import { operation, request, signOut } from "@/modules/crm/client";
 import { PageHeading, Dialog } from "@/components/crm/ui";
+import { roleLabels, type Role } from "@/modules/crm/types";
+import { downloadFile } from "@/modules/crm/store";
+type Account = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+};
 export function SettingsPage() {
-  const { state, run, toast } = useCrm();
-  const [confirm, setConfirm] = useState(false);
-  const [backup, setBackup] = useState<string | null>(null);
+  const { state, user, toast, busy } = useCrm();
+  const [accounts, setAccounts] = useState<Account[]>([]),
+    [creating, setCreating] = useState(false),
+    [reset, setReset] = useState<Account | null>(null),
+    [version, setVersion] = useState(0);
+  useEffect(() => {
+    if (user?.role === "ADMIN")
+      void request("users")
+        .then(setAccounts)
+        .catch((e) => toast(e.message, true));
+  }, [user?.role, version, toast]); // Server remains the source of permissions.
+  const update = async (id: string, input: unknown) => {
+    try {
+      await request("users/" + id, "PATCH", input);
+      setVersion((v) => v + 1);
+      toast("Akun staf diperbarui.");
+      return true;
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Perubahan gagal.", true);
+      return false;
+    }
+  };
   return (
     <div className="page-stack">
       <PageHeading
-        eyebrow="WORKSPACE SETTINGS"
-        title="Pengaturan"
-        description="Atur pengalaman demonstrasi dan kelola data workspace."
+        eyebrow="ACCOUNT & WORKSPACE"
+        title="Akun & pengaturan"
+        description="Kelola akses tim dan keamanan akun perusahaan."
       />
-      <div className="settings-grid">
+      <div className="account-grid">
         <section className="panel settings-card">
           <span className="metric-icon red">
-            <Settings2 size={23} />
+            <ShieldCheck size={23} />
           </span>
-          <h2>Simulasi peran pengguna</h2>
+          <h2>{user?.name}</h2>
           <p>
-            Coba pengalaman akses setiap anggota tim. Ini simulasi UI dan aturan
-            bisnis lokal, bukan autentikasi atau pembatasan keamanan server.
+            {user?.email}
+            <br />
+            {user ? roleLabels[user.role] : ""}
           </p>
-          <label className="form-field">
-            <span>Peran aktif</span>
-            <select
-              value={state.role}
-              onChange={(e) =>
-                run(
-                  { type: "ROLE", role: e.target.value as Role },
-                  "Peran simulasi diperbarui.",
-                )
-              }
-            >
-              {Object.entries(roleLabels).map(([key, label]) => (
-                <option value={key} key={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="role-permissions">
-            {[
-              [
-                "Administrator",
-                "Seluruh pengelolaan data dan simulator integrasi.",
-              ],
-              [
-                "Customer service",
-                "Pelanggan, langganan, dan penanganan tiket.",
-              ],
-              [
-                "Teknisi · Raka",
-                "Status dan catatan pada tiket yang ditugaskan ke Raka.",
-              ],
-              ["Manajer", "Melihat dashboard, data, dan mengunduh laporan."],
-            ].map(([title, text]) => (
-              <div key={title}>
-                <ShieldCheck size={16} />
-                <span>
-                  <strong>{title}</strong>
-                  <p>{text}</p>
-                </span>
-              </div>
-            ))}
+          <div className="real-notice">
+            Hak akses ditetapkan oleh administrator dan diperiksa di server pada
+            setiap permintaan. Perubahan tidak disimpan di browser.
           </div>
+          <h3 style={{ marginTop: 24 }}>Ubah password</h3>
+          <form
+            className="page-stack"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget,
+                data = new FormData(form);
+              if (data.get("newPassword") !== data.get("confirmation")) {
+                toast("Konfirmasi password tidak sama.", true);
+                return;
+              }
+              try {
+                await operation("auth/password", {
+                  currentPassword: String(data.get("currentPassword")),
+                  newPassword: String(data.get("newPassword")),
+                });
+                form.reset();
+                toast("Password diganti. Sesi perangkat lain telah dicabut.");
+              } catch (e) {
+                toast(
+                  e instanceof Error ? e.message : "Gagal mengganti password.",
+                  true,
+                );
+              }
+            }}
+          >
+            <label className="form-field">
+              <span>Password saat ini</span>
+              <input
+                name="currentPassword"
+                type="password"
+                required
+                maxLength={128}
+                autoComplete="current-password"
+              />
+            </label>
+            <label className="form-field">
+              <span>Password baru</span>
+              <input
+                name="newPassword"
+                type="password"
+                minLength={12}
+                maxLength={128}
+                required
+                autoComplete="new-password"
+              />
+            </label>
+            <label className="form-field">
+              <span>Ulangi password baru</span>
+              <input
+                name="confirmation"
+                type="password"
+                minLength={12}
+                maxLength={128}
+                required
+                autoComplete="new-password"
+              />
+            </label>
+            <button disabled={busy} className="btn btn-primary" type="submit">
+              <LockKeyhole size={16} />
+              Ganti password
+            </button>
+          </form>
+          <div className="settings-divider" />
+          <button
+            className="btn btn-secondary"
+            onClick={() => void signOut().catch((e) => toast(e.message, true))}
+          >
+            <LogOut size={16} />
+            Keluar dari akun
+          </button>
         </section>
         <div className="settings-column">
           <section className="panel settings-card">
             <span className="metric-icon blue">
-              <Database size={23} />
+              <Download size={23} />
             </span>
-            <h2>Data demonstrasi</h2>
+            <h2>Ekspor data operasional</h2>
             <p>
-              Data tersimpan di browser dan perangkat ini. Tidak disinkronkan ke
-              database atau pengguna lain. Ekspor salinan sebelum menghapus data
-              browser.
+              Unduh salinan data yang dapat diakses akun Anda. Pencadangan
+              database lengkap dijalankan oleh pengelola server; aplikasi tidak
+              menyediakan tombol penghapusan seluruh database.
             </p>
             <button
               className="btn btn-secondary"
               onClick={() =>
                 downloadFile(
-                  "nusa-crm-backup.json",
+                  "nusa-data-operasional.json",
                   JSON.stringify(state, null, 2),
                 )
               }
             >
-              <Download size={16} />
-              Ekspor backup JSON
-            </button>
-            <label className="btn btn-secondary import-backup">
-              <Upload size={16} />
-              Impor backup JSON
-              <input
-                aria-label="Pilih file backup JSON"
-                className="sr-only"
-                type="file"
-                accept="application/json,.json"
-                disabled={state.role !== "ADMIN"}
-                onChange={async (e) => {
-                  const input = e.currentTarget;
-                  const file = input.files?.[0];
-                  if (file) {
-                    if (file.size > 2000000)
-                      toast("Ukuran backup maksimal 2 MB.", true);
-                    else setBackup(await file.text());
-                  }
-                  input.value = "";
-                }}
-              />
-            </label>
-            <div className="settings-divider" />
-            <h3>Mulai ulang workspace</h3>
-            <p>
-              Mengganti seluruh perubahan lokal dengan data contoh awal.
-              Tindakan ini tidak dapat dibatalkan tanpa backup.
-            </p>
-            <button
-              className="btn btn-danger-soft"
-              disabled={state.role !== "ADMIN"}
-              onClick={() => setConfirm(true)}
-            >
-              <RotateCcw size={15} />
-              Reset data demo
+              Unduh data JSON
             </button>
           </section>
-          <section className="security-note">
-            <LockKeyhole size={23} />
-            <div>
-              <h3>Dirancang untuk demonstrasi</h3>
-              <p>
-                Jangan masukkan data pelanggan nyata. Database PostgreSQL, login
-                yang aman, serta API Keuangan/SCM nyata memerlukan deployment
-                backend dan kredensial tersendiri.
-              </p>
-            </div>
-          </section>
+          {user?.role === "ADMIN" && (
+            <section className="panel settings-card">
+              <div className="card-heading" style={{ padding: 0 }}>
+                <h2>
+                  <Users size={19} /> Akun staf
+                </h2>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setCreating(true)}
+                >
+                  <Plus size={15} />
+                  Tambah akun
+                </button>
+              </div>
+              <div className="account-list">
+                {accounts.map((a) => (
+                  <article key={a.id} className="account-row">
+                    <div>
+                      <strong>{a.name}</strong>
+                      <small>{a.isActive ? "Aktif" : "Nonaktif"}</small>
+                    </div>
+                    <small>{a.email}</small>
+                    <div>
+                      <select
+                        aria-label={`Peran ${a.name}`}
+                        value={a.role}
+                        onChange={(e) =>
+                          void update(a.id, { role: e.target.value })
+                        }
+                      >
+                        {Object.entries(roleLabels).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          void update(a.id, { isActive: !a.isActive })
+                        }
+                      >
+                        {a.isActive ? "Nonaktifkan" : "Aktifkan"}
+                      </button>
+                    </div>
+                    <button className="text-link" onClick={() => setReset(a)}>
+                      Atur ulang password
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
-      {confirm && (
+      {creating && (
         <Dialog
-          title="Reset seluruh data demo?"
-          onClose={() => setConfirm(false)}
+          title="Buat akun staf"
+          subtitle="Password minimal 12 karakter, mengandung huruf dan angka."
+          onClose={() => setCreating(false)}
         >
-          <div className="form-body">
-            <p className="muted">
-              Seluruh pelanggan, langganan, tiket, dan perubahan lokal akan
-              diganti dengan data awal. Unduh backup terlebih dahulu jika
-              diperlukan.
-            </p>
-          </div>
-          <div className="dialog-footer">
-            <button
-              className="btn btn-secondary"
-              onClick={() => setConfirm(false)}
-            >
-              Batal
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                try {
-                  resetDemo();
-                  toast("Workspace dikembalikan ke data awal.");
-                  setConfirm(false);
-                } catch (e) {
-                  toast(e instanceof Error ? e.message : "Reset gagal.", true);
-                }
-              }}
-            >
-              Ya, reset data
-            </button>
-          </div>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const data = Object.fromEntries(new FormData(e.currentTarget));
+              try {
+                await request("users", "POST", data);
+                setCreating(false);
+                setVersion((v) => v + 1);
+                toast("Akun staf dibuat.");
+              } catch (e) {
+                toast(
+                  e instanceof Error ? e.message : "Akun gagal dibuat.",
+                  true,
+                );
+              }
+            }}
+          >
+            <div className="form-body">
+              <label className="form-field">
+                <span>Nama staf</span>
+                <input name="name" minLength={3} maxLength={80} required />
+              </label>
+              <label className="form-field">
+                <span>Email staf</span>
+                <input name="email" type="email" required maxLength={254} />
+              </label>
+              <label className="form-field">
+                <span>Peran staf</span>
+                <select name="role" defaultValue="CS">
+                  {Object.entries(roleLabels).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field">
+                <span>Password awal</span>
+                <input
+                  name="password"
+                  type="password"
+                  minLength={12}
+                  maxLength={128}
+                  autoComplete="new-password"
+                  required
+                />
+              </label>
+            </div>
+            <div className="dialog-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setCreating(false)}
+              >
+                Batal
+              </button>
+              <button className="btn btn-primary" type="submit">
+                Simpan akun
+              </button>
+            </div>
+          </form>
         </Dialog>
       )}
-      {backup !== null && (
+      {reset && (
         <Dialog
-          title="Pulihkan backup workspace?"
-          onClose={() => setBackup(null)}
+          title={`Password baru: ${reset.name}`}
+          subtitle="Seluruh sesi akun ini akan dicabut setelah perubahan."
+          onClose={() => setReset(null)}
         >
-          <div className="form-body">
-            <p className="muted">
-              Data lokal saat ini akan diganti dengan isi backup. File diperiksa
-              sebelum perubahan diterapkan.
-            </p>
-          </div>
-          <div className="dialog-footer">
-            <button
-              className="btn btn-secondary"
-              onClick={() => setBackup(null)}
-            >
-              Batal
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                try {
-                  restoreDemo(backup);
-                  toast("Backup berhasil dipulihkan.");
-                  setBackup(null);
-                } catch (e) {
-                  toast(
-                    e instanceof Error
-                      ? e.message
-                      : "Backup tidak dapat dibaca.",
-                    true,
-                  );
-                  setBackup(null);
-                }
-              }}
-            >
-              Pulihkan data
-            </button>
-          </div>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const data = new FormData(e.currentTarget);
+              if (
+                await update(reset.id, {
+                  newPassword: String(data.get("password")),
+                })
+              )
+                setReset(null);
+            }}
+          >
+            <div className="form-body">
+              <label className="form-field">
+                <span>Password baru staf</span>
+                <input
+                  name="password"
+                  type="password"
+                  minLength={12}
+                  maxLength={128}
+                  autoComplete="new-password"
+                  required
+                />
+              </label>
+            </div>
+            <div className="dialog-footer">
+              <button className="btn btn-primary" type="submit">
+                Ganti password staf
+              </button>
+            </div>
+          </form>
         </Dialog>
       )}
     </div>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Status deployment Nusa CRM server: PostgreSQL, Keuangan dan SCM.">
+<title>Nusa CRM · Status deployment server</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#17233b;font:16px/1.65 system-ui,sans-serif}a{color:inherit}header{background:#0c1932;color:white;padding:22px max(6vw,24px);display:flex;justify-content:space-between;align-items:center;gap:20px}header strong{font-size:25px;letter-spacing:-1px}header strong span{color:#ff5263}header a{font-size:14px;color:#c3cee3;text-decoration:none}main{max-width:1100px;margin:auto;padding:70px 24px 90px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;color:#d72b46}h1{font-size:clamp(36px,6vw,62px);line-height:1.1;letter-spacing:-2px;max-width:820px;margin:20px 0}p{color:#5a6880;max-width:760px}.status{margin:32px 0;padding:22px 25px;border:1px solid #f0d6a8;border-left:4px solid #de9b20;border-radius:12px;background:#fffaf0}.status strong{display:block;color:#8a5909}.actions{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 48px}.button{padding:13px 20px;border-radius:9px;background:#e52a46;color:white;text-decoration:none;font-weight:700}.secondary{background:white;color:#17233b;border:1px solid #dce2ed}.preview{margin:0 0 48px}.preview h2{font-size:24px;letter-spacing:-.5px}.preview img{width:100%;max-height:610px;object-fit:cover;object-position:top;border-radius:14px;border:1px solid #dce2ed;box-shadow:0 15px 45px #17233b12}.preview p{font-size:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}article{background:white;padding:24px;border:1px solid #e0e5ee;border-radius:14px}article span{font-size:12px;font-weight:700;color:#ba203b}article h2{font-size:19px;margin:10px 0}article p{font-size:14px;margin-bottom:0}footer{font-size:13px;color:#6b7890;margin-top:40px;border-top:1px solid #dce2ed;padding-top:20px}@media(max-width:700px){main{padding-top:42px}.grid{grid-template-columns:1fr}h1{letter-spacing:-1px}header a{max-width:130px;text-align:right}}
+</style>
+</head>
+<body>
+<header><strong>nusa<span>.</span> <small>CRM</small></strong><a href="https://github.com/doees/crm-telko">Lihat repository ↗</a></header>
+<main>
+<div class="eyebrow">CONNECTED WORKSPACE · SERVER EDITION</div>
+<h1>Fondasi operasional.<br>Koneksi yang nyata.</h1>
+<p>Nusa CRM menghubungkan pengelolaan pelanggan, langganan dan tiket dengan layanan Keuangan serta SCM melalui REST API dan database persisten.</p>
+<div class="status"><strong>Menunggu VPS dan domain untuk aktivasi publik</strong>Halaman ini adalah status deployment. Aplikasi backend belum dihosting secara publik. GitHub Pages hanya melayani file statis dan tidak menjalankan login server, Next.js API atau PostgreSQL.</div>
+<div class="actions"><a class="button" href="https://github.com/doees/crm-telko/blob/main/docs/DEPLOYMENT.md">Panduan aktivasi VPS ↗</a><a class="button secondary" href="https://github.com/doees/crm-telko#menjalankan-lokal-dengan-docker">Jalankan di komputer lokal ↗</a></div>
+<section class="preview"><h2>Tampilan workspace server</h2><p>Tangkapan layar dari pengujian aplikasi dengan PostgreSQL dan layanan REST yang berjalan. Identitas adalah data uji. Gambar ini merupakan pratinjau tampilan; login interaktif memerlukan server yang diaktifkan.</p><a href="dashboard-server.png" aria-label="Buka tangkapan layar dashboard lengkap"><img src="dashboard-server.png" alt="Dashboard Nusa CRM server dengan pelanggan dan langganan dari database pengujian" width="1280" height="1508" loading="lazy"></a></section>
+<div class="grid"><article><span>01 / CRM</span><h2>Satu data untuk tim</h2><p>Login staf, peran server, pelanggan, paket, langganan, tiket dan laporan tersimpan di PostgreSQL.</p></article><article><span>02 / INTEGRASI</span><h2>Keuangan & SCM</h2><p>Layanan REST terpisah mencatat pembayaran manual, inventori dan serah-terima. Callback ditandatangani dan antrean mendukung retry.</p></article><article><span>03 / DEPLOYMENT</span><h2>Paket Docker VPS</h2><p>Migrasi database, admin awal privat, reverse proxy HTTPS, healthcheck dan panduan backup tersedia dalam repository.</p></article></div>
+<footer>Final project Integrasi Aplikasi Korporasi · Nusa CRM merupakan identitas proyek, tidak berafiliasi dengan Telkom atau Telkomsel. Pencatatan pembayaran belum terhubung payment gateway; provisioning jaringan fisik memerlukan provider tersendiri.</footer>
+</main>
+</body></html>

@@ -1,57 +1,90 @@
 "use client";
-import { useState, useSyncExternalStore, useEffect } from "react";
-import { CircleCheck, CircleAlert, X } from "lucide-react";
-import { ZodError } from "zod";
+import { useState, useSyncExternalStore, useEffect, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { CircleCheck, CircleAlert, X, Radio, RefreshCw } from "lucide-react";
 import { CrmContext } from "./context";
 import {
   subscribe,
   getSnapshot,
   getServerSnapshot,
   dispatch,
-  storageWarning,
-} from "./store";
+  refresh,
+} from "./client";
 import type { Command, Modal } from "./types";
 import { CrmDialogs } from "@/components/crm/dialogs";
 export function CrmProvider({ children }: { children: React.ReactNode }) {
-  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const view = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const path = usePathname();
+  const router = useRouter();
   const [modal, open] = useState<Modal>(null);
   const [notice, setNotice] = useState<{
     message: string;
     error: boolean;
   } | null>(null);
-  const toast = (message: string, error = false) =>
-    setNotice({ message, error });
+  const toast = useCallback(
+    (message: string, error = false) => setNotice({ message, error }),
+    [],
+  );
   useEffect(() => {
     if (!notice) return;
-    const timeout = setTimeout(() => setNotice(null), 6000);
-    return () => clearTimeout(timeout);
+    const t = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(t);
   }, [notice]);
-  function run(command: Command, message = "Perubahan berhasil disimpan.") {
+  useEffect(() => {
+    if (view.status === "signedout" && path !== "/login")
+      router.replace("/login");
+  }, [view.status, path, router]);
+  async function run(
+    command: Command,
+    message = "Perubahan berhasil disimpan.",
+  ) {
     try {
-      dispatch(command);
+      await dispatch(command);
       toast(message);
       return true;
     } catch (error) {
-      toast(
-        error instanceof ZodError
-          ? error.issues[0].message
-          : error instanceof Error
-            ? error.message
-            : "Perubahan gagal disimpan.",
-        true,
-      );
+      toast(error instanceof Error ? error.message : "Perubahan gagal.", true);
       return false;
     }
   }
+  const context = {
+    state: view.state,
+    user: view.user,
+    busy: view.busy,
+    run,
+    open,
+    modal,
+    toast,
+  };
+  const protectedPage = path !== "/login";
+  let content = children;
+  if (protectedPage && view.status !== "ready")
+    content = (
+      <div className="auth-loading">
+        <Radio size={36} />
+        <h1>
+          {view.status === "error"
+            ? "Koneksi belum tersedia"
+            : "Memuat workspace"}
+        </h1>
+        <p>
+          {view.status === "error"
+            ? view.error
+            : "Memeriksa sesi dan data layanan…"}
+        </p>
+        {view.status === "error" && (
+          <button className="btn btn-primary" onClick={() => void refresh()}>
+            <RefreshCw size={16} />
+            Coba kembali
+          </button>
+        )}
+      </div>
+    );
   return (
-    <CrmContext.Provider value={{ state, run, open, modal, toast }}>
-      {children}
-      {storageWarning() && (
-        <div className="storage-warning" role="alert">
-          {storageWarning()}
-        </div>
-      )}
-      <CrmDialogs />
+    <CrmContext.Provider value={context}>
+      {view.busy && <div className="busy-indicator" />}
+      {content}
+      {protectedPage && view.status === "ready" && <CrmDialogs />}
       {notice && (
         <div
           className={`toast ${notice.error ? "toast-error" : ""}`}

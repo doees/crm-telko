@@ -34,7 +34,7 @@ export function DashboardOverview() {
   const end = state.customers.reduce(
     (latest, c) =>
       c.createdAt.slice(0, 7) > latest ? c.createdAt.slice(0, 7) : latest,
-    "2026-11",
+    new Date().toISOString().slice(0, 7),
   );
   const months = Array.from({ length: Number(period) }, (_, i) => {
     const d = new Date(`${end}-01T00:00:00Z`);
@@ -198,7 +198,7 @@ export function DashboardOverview() {
             <span>pelanggan baru pada periode ini</span>
             <span className="chart-trend">
               <TrendingUp size={14} />
-              Data tersimpan
+              Data operasional
             </span>
           </div>
           <div
@@ -242,7 +242,7 @@ export function DashboardOverview() {
           <div className="chart-legend">
             <span />
             <p>Pelanggan baru</p>
-            <small>Jumlah aktual pada data demo</small>
+            <small>Jumlah pelanggan terdaftar</small>
           </div>
         </section>
         <section className="panel distribution-card">
@@ -386,7 +386,10 @@ export function DashboardOverview() {
                     {state.customers.find((c) => c.id === t.customerId)?.name}
                   </small>
                   <strong>{t.subject}</strong>
-                  <span>{t.assignee}</span>
+                  <span>
+                    {state.team?.find((u) => u.id === t.assignee)?.name ??
+                      t.assignee}
+                  </span>
                 </span>
                 <ChevronRight size={15} />
               </button>

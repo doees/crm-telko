@@ -23,7 +23,6 @@ import {
 import { useCrm } from "@/modules/crm/context";
 import { money, dateLabel, canWrite } from "@/modules/crm/domain";
 import {
-  technicians,
   type TicketInput,
   type CustomerInput,
   type PackageInput,
@@ -51,12 +50,13 @@ function FormFooter({
   onClose: () => void;
   label?: string;
 }) {
+  const { busy } = useCrm();
   return (
     <div className="dialog-footer">
       <button type="button" className="btn btn-secondary" onClick={onClose}>
         Batal
       </button>
-      <button className="btn btn-primary" type="submit">
+      <button className="btn btn-primary" type="submit" disabled={busy}>
         {label}
         <ArrowRight size={16} />
       </button>
@@ -73,12 +73,12 @@ function CustomerForm({ id, close }: { id?: string; close: () => void }) {
       onClose={close}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const form = new FormData(e.currentTarget);
           const data = Object.fromEntries(form) as CustomerInput;
           if (
-            run(
+            await run(
               { type: "SAVE_CUSTOMER", id, data },
               "Data pelanggan berhasil disimpan.",
             )
@@ -135,7 +135,7 @@ function CustomerForm({ id, close }: { id?: string; close: () => void }) {
           <div className="info-note">
             <CircleCheck size={17} />
             <span>
-              Gunakan identitas fiktif. Data demo disimpan pada browser ini.
+              Informasi kontak digunakan untuk penagihan dan layanan pelanggan.
             </span>
           </div>
         </div>
@@ -157,7 +157,7 @@ function PackageForm({ id, close }: { id?: string; close: () => void }) {
       onClose={close}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const form = new FormData(e.currentTarget);
           const data = {
@@ -168,7 +168,7 @@ function PackageForm({ id, close }: { id?: string; close: () => void }) {
             device: form.get("device") === "on",
           };
           if (
-            run(
+            await run(
               { type: "SAVE_PACKAGE", id, data },
               "Katalog paket berhasil diperbarui.",
             )
@@ -262,11 +262,11 @@ function SubscriptionForm({
       onClose={close}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const form = new FormData(e.currentTarget);
           if (
-            run(
+            await run(
               {
                 type: "CREATE_SUBSCRIPTION",
                 customerId: selectedCustomer,
@@ -363,7 +363,7 @@ function TicketForm({ id, close }: { id?: string; close: () => void }) {
       onClose={close}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const form = new FormData(e.currentTarget);
           const input = {
@@ -375,7 +375,7 @@ function TicketForm({ id, close }: { id?: string; close: () => void }) {
             assignee: form.get("assignee") as TicketInput["assignee"],
           };
           if (
-            run(
+            await run(
               { type: "SAVE_TICKET", id, data: input },
               "Tiket bantuan berhasil disimpan.",
             )
@@ -448,8 +448,15 @@ function TicketForm({ id, close }: { id?: string; close: () => void }) {
                 name="assignee"
                 defaultValue={data?.assignee ?? "Belum ditugaskan"}
               >
-                {technicians.map((t) => (
-                  <option key={t}>{t}</option>
+                {[
+                  { id: "Belum ditugaskan", name: "Belum ditugaskan" },
+                  ...(state.team ?? []).filter(
+                    (u) => u.role === "TECHNICIAN" && u.isActive,
+                  ),
+                ].map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -701,7 +708,7 @@ function SubscriptionDetail({ id, close }: { id: string; close: () => void }) {
                     kind: "confirm",
                     title: "Batalkan langganan?",
                     description:
-                      "Pembatalan bersifat final pada demo ini. Invoice dan perangkat perlu direkonsiliasi terpisah.",
+                      "Pembatalan bersifat final. Invoice belum lunas dan reservasi yang belum dikirim akan dibatalkan melalui integrasi. Pembayaran yang sudah lunas dan perangkat terkirim memerlukan rekonsiliasi.",
                     action: {
                       type: "SUBSCRIPTION_STATUS",
                       id,
@@ -720,14 +727,14 @@ function SubscriptionDetail({ id, close }: { id: string; close: () => void }) {
   );
 }
 function TicketDetail({ id, close }: { id: string; close: () => void }) {
-  const { state, run } = useCrm();
+  const { state, run, user, busy } = useCrm();
   const [comment, setComment] = useState("");
   const t = state.tickets.find((t) => t.id === id);
   if (!t) return null;
   const customer = state.customers.find((c) => c.id === t.customerId);
   const writable =
     canWrite(state.role, "ticket") &&
-    (state.role !== "TECHNICIAN" || t.assignee === "Raka Wijaya");
+    (state.role !== "TECHNICIAN" || t.assignee === user?.id);
   return (
     <Dialog title={t.number} subtitle={t.subject} onClose={close} wide>
       <div className="detail-body">
@@ -756,7 +763,10 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
           <select
             value={t.assignee}
             disabled={
-              !writable || state.role === "TECHNICIAN" || t.status === "CLOSED"
+              busy ||
+              !writable ||
+              state.role === "TECHNICIAN" ||
+              t.status === "CLOSED"
             }
             onChange={(e) =>
               run({
@@ -766,8 +776,15 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
               })
             }
           >
-            {technicians.map((name) => (
-              <option key={name}>{name}</option>
+            {[
+              { id: "Belum ditugaskan", name: "Belum ditugaskan" },
+              ...(state.team ?? []).filter(
+                (u) => u.role === "TECHNICIAN" && u.isActive,
+              ),
+            ].map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
             ))}
           </select>
         </label>
@@ -796,10 +813,10 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
         {writable && t.status !== "CLOSED" && (
           <form
             className="comment-form"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (
-                run(
+                await run(
                   { type: "TICKET_COMMENT", id, text: comment },
                   "Catatan penanganan ditambahkan.",
                 )
@@ -816,7 +833,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={busy}>
               <Send size={15} />
               Kirim catatan
             </button>
@@ -832,6 +849,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
             {t.status === "OPEN" && (
               <button
                 className="btn btn-primary"
+                disabled={busy}
                 onClick={() =>
                   run({ type: "TICKET_STATUS", id, status: "IN_PROGRESS" })
                 }
@@ -842,6 +860,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
             {t.status === "IN_PROGRESS" && (
               <button
                 className="btn btn-primary"
+                disabled={busy || t.comments.length === 0}
                 onClick={() =>
                   run({ type: "TICKET_STATUS", id, status: "RESOLVED" })
                 }
@@ -853,6 +872,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
               <>
                 <button
                   className="btn btn-secondary"
+                  disabled={busy}
                   onClick={() =>
                     run({ type: "TICKET_STATUS", id, status: "IN_PROGRESS" })
                   }
@@ -862,6 +882,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
                 {state.role !== "TECHNICIAN" && (
                   <button
                     className="btn btn-primary"
+                    disabled={busy}
                     onClick={() =>
                       run({ type: "TICKET_STATUS", id, status: "CLOSED" })
                     }
@@ -878,7 +899,7 @@ function TicketDetail({ id, close }: { id: string; close: () => void }) {
   );
 }
 export function CrmDialogs() {
-  const { modal, open, run } = useCrm();
+  const { modal, open, run, busy } = useCrm();
   const close = useCallback(() => open(null), [open]);
   if (!modal) return null;
   switch (modal.kind) {
@@ -932,8 +953,9 @@ export function CrmDialogs() {
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => {
-                if (run(modal.action)) close();
+              disabled={busy}
+              onClick={async () => {
+                if (await run(modal.action)) close();
               }}
             >
               Ya, lanjutkan

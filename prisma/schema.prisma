@@ -7,17 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Initial database foundation; no CRUD or business services in phase 1.
+// Operational CRM database. Finance and SCM own independent databases.
 model Customer {
-  id             String         @id @default(uuid()) @db.Uuid
-  customerNumber String         @unique @map("customer_number")
-  name           String
-  email          String?
-  phone          String
-  address        String
-  status         CustomerStatus @default(ACTIVE)
-  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id              String         @id @default(uuid()) @db.Uuid
+  customerNumber  String         @unique @map("customer_number")
+  name            String
+  email           String?
+  phone           String
+  address         String
+  status          CustomerStatus @default(ACTIVE)
+  phoneNormalized String?        @unique @map("phone_normalized")
+  subscriptions   Subscription[]
+  tickets         Ticket[]
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([status, createdAt])
   @@map("customers")
@@ -26,4 +29,244 @@ model Customer {
 enum CustomerStatus {
   ACTIVE
   INACTIVE
+}
+
+enum Role {
+  ADMIN
+  CS
+  TECHNICIAN
+  MANAGER
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InvoiceStatus {
+  PENDING
+  ISSUED
+  PAID
+  VOID
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PROCESSING
+  FULFILLED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+model User {
+  id              String          @id @default(uuid()) @db.Uuid
+  email           String          @unique
+  name            String          @unique
+  passwordHash    String
+  role            Role
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  sessions        Session[]
+  assignedTickets Ticket[]
+  comments        TicketComment[]
+  audit           AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique
+  csrfToken String
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Workspace {
+  id       String @id @default("default")
+  revision Int    @default(0)
+}
+
+model ServicePackage {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @unique
+  speed         Int
+  price         Decimal        @db.Decimal(14, 0)
+  category      String
+  device        Boolean
+  status        CustomerStatus @default(ACTIVE)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id          String             @id @default(uuid()) @db.Uuid
+  number      String             @unique
+  customerId  String             @db.Uuid
+  customer    Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  packageId   String             @db.Uuid
+  package     ServicePackage     @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  price       Decimal            @db.Decimal(14, 0)
+  device      Boolean
+  address     String
+  status      SubscriptionStatus @default(PENDING)
+  createdAt   DateTime           @default(now()) @db.Timestamptz(3)
+  activatedAt DateTime?          @db.Timestamptz(3)
+  tickets     Ticket[]
+  invoice     Invoice?
+  fulfillment Fulfillment?
+
+  @@index([customerId, status])
+}
+
+model Ticket {
+  id             String          @id @default(uuid()) @db.Uuid
+  number         String          @unique
+  customerId     String          @db.Uuid
+  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  subscriptionId String?         @db.Uuid
+  subscription   Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  subject        String
+  description    String
+  priority       Priority
+  status         TicketStatus    @default(OPEN)
+  assigneeId     String?         @db.Uuid
+  assignee       User?           @relation(fields: [assigneeId], references: [id], onDelete: Restrict)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
+  comments       TicketComment[]
+
+  @@index([status, assigneeId])
+}
+
+model TicketComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticketId  String   @db.Uuid
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  authorId  String   @db.Uuid
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  text      String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Invoice {
+  id              String        @id @default(uuid()) @db.Uuid
+  number          String        @unique
+  subscriptionId  String        @unique @db.Uuid
+  subscription    Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  amount          Decimal       @db.Decimal(14, 0)
+  status          InvoiceStatus @default(PENDING)
+  externalId      String?       @unique
+  externalVersion Int           @default(0)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  paidAt          DateTime?     @db.Timestamptz(3)
+}
+
+model Fulfillment {
+  id              String            @id @default(uuid()) @db.Uuid
+  subscriptionId  String            @unique @db.Uuid
+  subscription    Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  status          FulfillmentStatus @default(PENDING)
+  externalId      String?           @unique
+  externalStatus  String?
+  externalVersion Int               @default(0)
+}
+
+model OutboxEvent {
+  id            String               @id @default(uuid()) @db.Uuid
+  dedupeKey     String               @unique
+  destination   String
+  resourceId    String               @db.Uuid
+  type          String
+  payload       Json
+  status        DeliveryStatus       @default(PENDING)
+  attempts      Int                  @default(0)
+  maxAttempts   Int                  @default(5)
+  nextAttemptAt DateTime?            @default(now()) @db.Timestamptz(3)
+  lockedUntil   DateTime?            @db.Timestamptz(3)
+  leaseToken    String?
+  error         String?
+  createdAt     DateTime             @default(now()) @db.Timestamptz(3)
+  deliveries    IntegrationAttempt[]
+
+  @@index([status, nextAttemptAt])
+}
+
+model IntegrationAttempt {
+  id             String      @id @default(uuid()) @db.Uuid
+  eventId        String      @db.Uuid
+  event          OutboxEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  success        Boolean
+  responseStatus Int?
+  error          String?
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+}
+
+model InboxEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  source          String
+  externalEventId String
+  resourceId      String
+  version         Int
+  processedAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([source, externalEventId])
+}
+
+model IntegrationHealth {
+  destination String   @id
+  healthy     Boolean  @default(false)
+  checkedAt   DateTime @db.Timestamptz(3)
+}
+
+model Activity {
+  id       String   @id @default(uuid()) @db.Uuid
+  text     String
+  category String
+  at       DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model AuditLog {
+  id      String   @id @default(uuid()) @db.Uuid
+  actorId String?  @db.Uuid
+  actor   User?    @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action  String
+  data    Json
+  at      DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([at])
+}
+
+model CommandReceipt {
+  id        String   @id
+  actorId   String   @db.Uuid
+  hash      String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 }

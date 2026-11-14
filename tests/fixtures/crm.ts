@@ -1,4 +1,4 @@
-import type { CrmState } from "./types";
+import type { CrmState } from "../../src/modules/crm/types";
 const names = [
   "Aditya Pratama",
   "Nadia Rahmawati",

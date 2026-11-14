@@ -1,3 +1,5 @@
+> Arsip historis sebelum server v1.0. Instruksi dan hasil versi saat ini: [README](../README.md), [laporan server](SERVER-IMPLEMENTATION.md). Klaim demo/localStorage dalam arsip ini tidak menggambarkan runtime v1.0.
+
 # Implementasi demo CRM lengkap dan pembaruan tampilan
 
 Tanggal: 14 November 2026 (Asia/Jakarta). Kelanjutan setelah pengguna meminta seluruh alur website dapat dicoba tanpa pengerjaan bertahap, dengan tampilan menyerupai portal operator telekomunikasi.
