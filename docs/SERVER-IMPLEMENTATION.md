@@ -25,7 +25,7 @@ Repository yang diperiksa: https://github.com/doees/crm-telko, base main `b4071c
 | Layanan terpisah | services/{server,protocol,start-finance,start-scm}.ts; services/prisma/schema.prisma; migration service_ledgers |
 | Frontend | src/app/(auth)/login; modules/crm client/provider/context/store/domain/types/empty; shell/dialog; dashboard, integrasi, tiket, laporan, pengaturan |
 | Konfigurasi | next.config.ts, package.json/lock, tsconfig, eslint, Playwright, .env.example, .gitignore |
-| Deployment | Dockerfile, .dockerignore, compose.yml, ops/Caddyfile, ops/init-databases.sh, ops/compose.local.yml, ops/compose.qa.yml, ops/backup.sh |
+| Deployment | Dockerfile, .dockerignore, compose.yml, ops/Caddyfile, ops/init-databases.sh, ops/compose.local.yml, ops/compose.qa.yml, ops/backup.sh, ops/test-backup.sh |
 | Tooling | scripts/setup-env.mjs, init-stack.ts, bootstrap-admin.ts, migrate-services.mjs, test-server.mjs, assert-persistence.mjs, smoke-compose.mjs |
 | Pengujian | tests/unit/crm-domain.test.ts; tests/integration/server.test.ts; tests/e2e/crm.spec.ts |
 | Dokumentasi/CI | README; docs/{ARCHITECTURE,API,DEPLOYMENT,SERVER-IMPLEMENTATION}.md; public/openapi.json; services/openapi.json; .github/workflows; ops/pages/index.html |
@@ -61,6 +61,8 @@ Lint, TypeScript, production build dan 5 unit test lulus lokal. Satu pengujian i
 
 Restart proses CRM mempertahankan data dan autentikasi melalui PostgreSQL. Empat tes browser production lulus: login dan data lintas browser, alur pembayaran/stok/perangkat melalui UI, administrasi staf dan penolakan manager di server, penanganan tiket/CSV serta 8 menu pada viewport mobile 390px tanpa overflow halaman. Seluruhnya memakai data pengujian pada container PostgreSQL terisolasi; volume operasional tidak dihapus.
 
+Pemeriksaan lengkap Docker Compose (migrasi, login, API Keuangan/SCM, aktivasi dan restart) juga lulus di [GitHub Actions run 43603179455](https://github.com/doees/crm-telko/actions/runs/43603179455).
+
 Image Docker berhasil dibangun lokal dengan Node 22 Debian slim. Pemeriksaan stack Compose lengkap dijalankan oleh job `docker-stack` di GitHub Actions; hasil terakhir ditautkan pada PR. Lingkungan lokal menggunakan disk 8 GB dan driver VFS yang menyalin layer/rootfs sehingga tidak cukup untuk beberapa container image besar bersamaan. Build image diselesaikan dengan cache npm tmpfs dan satu layer install/build, tanpa menghapus volume database.
 
 ## Kendala yang ditemukan dan perbaikan
@@ -70,7 +72,8 @@ Image Docker berhasil dibangun lokal dengan Node 22 Debian slim. Pemeriksaan sta
 3. Konfigurasi port/base URL host dan jaringan Docker berbeda. Compose meng-override URL internal; CLI lokal memakai loopback dan env privat.
 4. Kapasitas disk Docker habis pada image penuh dan layer dependensi terduplikasi. Image slim, cache tmpfs dan layer gabungan berhasil dibangun. Yang dibersihkan hanya cache/artifact hasil kerja; data PostgreSQL tetap disimpan.
 5. Pengujian browser ulang menemukan tombol penyelesaian tiket bisa ditekan saat catatan masih disimpan. Kontrol komentar/status kini disabled selama mutasi dan penyelesaian menunggu catatan tersimpan; pengujian memeriksa acknowledgment status server sebelum tindakan berikutnya.
-6. Hosting Pages bersifat statis. Workflow server tidak lagi mengekspor dashboard ke Pages; halaman Pages menunjukkan status menunggu VPS/domain secara eksplisit.
+6. Latihan backup berhasil membuat dan memulihkan dump; pemeriksaan awal memakai nama model Customer, padahal tabel legacy dipetakan ke customers. Assertion diperbaiki sesuai mapping Prisma sebelum pengujian CI ulang.
+7. Hosting Pages bersifat statis. Workflow server tidak lagi mengekspor dashboard ke Pages; halaman Pages menunjukkan status menunggu VPS/domain secara eksplisit.
 
 ## Yang belum diprovisikan atau dihubungkan
 

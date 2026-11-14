@@ -17,7 +17,7 @@ for candidate in backups/*; do [[ -d "$candidate" ]] && backup_dir="$candidate";
 [[ -n "$backup_dir" ]]
 for service in crm finance scm; do
     case "$service" in
-        crm) owner=crm_app; password_name=CRM_DB_PASSWORD; source_db=crm_test; tables=(Customer Subscription Session) ;;
+        crm) owner=crm_app; password_name=CRM_DB_PASSWORD; source_db=crm_test; tables=(customers Subscription Session) ;;
         finance) owner=finance_app; password_name=FINANCE_DB_PASSWORD; source_db=finance_test; tables=(ServiceInvoice Payment) ;;
         scm) owner=scm_app; password_name=SCM_DB_PASSWORD; source_db=scm_test; tables=(StockItem StockMovement FulfillmentRequest) ;;
     esac

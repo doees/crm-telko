@@ -8,6 +8,10 @@ CRM telekomunikasi untuk final project Integrasi Aplikasi Korporasi. Next.js App
 
 **Status publik:** https://doees.github.io/crm-telko/ — halaman status deployment, bukan aplikasi backend. VPS dan domain belum disediakan. GitHub Pages tidak dapat menjalankan Next.js server atau PostgreSQL. Ikuti [deployment VPS](docs/DEPLOYMENT.md) untuk mengaktifkan aplikasi di domain sendiri.
 
+![Dashboard server Nusa CRM dengan data pengujian](docs/images/dashboard-server.png)
+
+Tangkapan layar berasal dari pengujian browser terhadap backend PostgreSQL nyata; identitas yang terlihat adalah data uji, bukan data awal instalasi.
+
 ## Menjalankan lokal dengan Docker
 
 Prasyarat: Git, Docker Engine/Desktop dan Compose v2; Node.js 22.9+ atau 24 untuk generator konfigurasi. Sediakan sekitar 5 GB ruang kosong untuk build image.
